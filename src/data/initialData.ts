@@ -114,7 +114,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     id: 'cat-accessories',
     name: 'ACCESSORIES',
     slug: 'accessories',
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80',
     itemCount: 20,
   },
 ];
@@ -773,7 +773,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     categoryId: 'cat-accessories',
     categoryName: 'ACCESSORIES',
     images: [
-      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80',
     ],
     sizes: ['One Size'],
     colors: [

@@ -4,18 +4,21 @@ import React from 'react';
 import Link from 'next/link';
 import { useShop } from '@/context/ShopContext';
 
-const DEFAULT_CATEGORY_IMAGE = 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=400&q=80';
+const DEFAULT_CATEGORY_IMAGE =
+  'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=400&q=80';
 
 export const CategoryGrid: React.FC = () => {
-  const { categories } = useShop();
+  const { categories, categoriesLoaded } = useShop();
 
-  const featuredCats = categories.slice(0, 8);
+  // Only show top-level (parent) categories — no subcategories with parentId
+  const topLevelCats = categories.filter((cat) => !cat.parentId);
+  const featuredCats = topLevelCats.slice(0, 8);
 
   return (
     <section className="py-8 sm:py-12 bg-white dark:bg-[#0F172A] border-b border-slate-100 dark:border-[#1E293B]">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-6 sm:mb-10">
           <div>
             <h2 className="text-lg sm:text-xl md:text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-white">
               Shop By Category
@@ -32,29 +35,44 @@ export const CategoryGrid: React.FC = () => {
           </Link>
         </div>
 
-        {/* Circular Grid: 4 items per row on mobile, 8 on desktop */}
-        <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-4 md:gap-6">
-          {featuredCats.map((cat) => (
-            <Link
-              key={cat.id}
-              href={`/category/${cat.slug}`}
-              className="group flex flex-col items-center text-center space-y-1.5 sm:space-y-2.5"
-            >
-              <div className="relative w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-slate-200 dark:border-[#334155] p-0.5 sm:p-1 group-hover:border-[#D4AF37] group-hover:ring-4 group-hover:ring-[#D4AF37]/30 shadow-xs group-hover:shadow-lg transition-all duration-500 group-hover:scale-110 bg-slate-100 dark:bg-[#1E293B]">
-                <img
-                  src={cat.image || DEFAULT_CATEGORY_IMAGE}
-                  alt={cat.name}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = DEFAULT_CATEGORY_IMAGE;
-                  }}
-                  className="w-full h-full object-cover rounded-full group-hover:scale-105 transition-transform duration-700 ease-out"
-                />
-              </div>
-              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-all duration-300 transform group-hover:-translate-y-0.5 line-clamp-2 px-0.5 leading-tight">
-                {cat.name}
-              </span>
-            </Link>
-          ))}
+        {/* Category circles — flex so items always spread full width evenly */}
+        <div className="flex flex-wrap justify-evenly gap-y-6 sm:gap-y-8">
+          {!categoriesLoaded
+            ? /* Skeleton loaders — shown before API responds, prevents flash */
+              Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col items-center text-center gap-3"
+                  style={{ flex: '1 1 0', minWidth: 72, maxWidth: 200 }}
+                >
+                  <div className="w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full bg-slate-200 dark:bg-[#1E293B] animate-pulse" />
+                  <div className="h-3 w-16 rounded bg-slate-200 dark:bg-[#1E293B] animate-pulse" />
+                </div>
+              ))
+            : featuredCats.map((cat) => (
+                <Link
+                  key={cat.id}
+                  href={`/category/${cat.slug}`}
+                  className="group flex flex-col items-center text-center gap-3"
+                  style={{ flex: '1 1 0', minWidth: 72, maxWidth: 200 }}
+                >
+                  {/* Circle image */}
+                  <div className="w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-2 border-slate-200 dark:border-[#334155] group-hover:border-[#D4AF37] group-hover:ring-4 group-hover:ring-[#D4AF37]/30 shadow-sm group-hover:shadow-xl transition-all duration-500 group-hover:scale-110 bg-slate-100 dark:bg-[#1E293B]">
+                    <img
+                      src={cat.image || DEFAULT_CATEGORY_IMAGE}
+                      alt={cat.name}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = DEFAULT_CATEGORY_IMAGE;
+                      }}
+                      className="w-full h-full object-cover rounded-full group-hover:scale-105 transition-transform duration-700 ease-out"
+                    />
+                  </div>
+                  {/* Label */}
+                  <span className="text-[10px] sm:text-xs md:text-[13px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors duration-300 line-clamp-2 leading-tight px-1">
+                    {cat.name}
+                  </span>
+                </Link>
+              ))}
         </div>
       </div>
     </section>

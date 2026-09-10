@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 interface ShopContextType {
   products: Product[];
   categories: Category[];
+  categoriesLoaded: boolean;
   banners: Banner[];
   orders: Order[];
   cart: CartItem[];
@@ -71,6 +72,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [quickOrderProduct, setQuickOrderProduct] = useState<Product | null>(null);
+  // Track whether the API categories have been loaded (to suppress flash)
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
 
   // Load data from API / LocalStorage on mount
   useEffect(() => {
@@ -88,6 +91,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (catRes.status === 'fulfilled' && catRes.value?.success && Array.isArray(catRes.value.data) && catRes.value.data.length > 0) {
           setCategories(catRes.value.data);
         }
+        // Mark categories as loaded regardless (API responded — even if empty, use INITIAL)
+        setCategoriesLoaded(true);
 
         if (prodRes.status === 'fulfilled' && prodRes.value?.success && Array.isArray(prodRes.value.data) && prodRes.value.data.length > 0) {
           setProducts(prodRes.value.data);
@@ -567,6 +572,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         products,
         categories,
+        categoriesLoaded,
         banners,
         orders,
         cart,
