@@ -30,7 +30,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     name: 'CASUAL SHIRT',
     slug: 'casual-shirt',
     parentId: 'cat-men',
-    image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&h=600&q=80',
+    image: '/categories/cat-shirts.jpg',
     itemCount: 30,
   },
   {
@@ -38,7 +38,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     name: 'FORMAL SHIRT',
     slug: 'formal-shirt',
     parentId: 'cat-men',
-    image: 'https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?auto=format&fit=crop&w=600&h=600&q=80',
+    image: '/categories/cat-shirts.jpg',
     itemCount: 12,
   },
   {
@@ -71,7 +71,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     id: 'cat-women',
     name: 'WOMENS',
     slug: 'womens',
-    image: 'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?auto=format&fit=crop&w=600&q=80',
+    image: '/categories/cat-womens-ethnic.jpg',
     itemCount: 36,
   },
   {
@@ -79,7 +79,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     name: 'SALWAR KAMEEZ & KURTI',
     slug: 'kameez',
     parentId: 'cat-women',
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80',
+    image: '/categories/cat-womens-ethnic.jpg',
     itemCount: 25,
     highlightColor: '#f5199a',
   },
@@ -88,7 +88,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     name: 'SAREE COLLECTION',
     slug: 'saree',
     parentId: 'cat-women',
-    image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=600&q=80',
+    image: '/categories/cat-saree.jpg',
     itemCount: 19,
   },
   {
