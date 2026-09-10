@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id             String     @id @default(cuid())
+  name           String
+  slug           String     @unique
+  image          String?
+  itemCount      Int        @default(0)
+  highlightColor String?
+  parentId       String?
+  parent         Category?  @relation("CategoryToCategory", fields: [parentId], references: [id], onDelete: SetNull)
+  children       Category[] @relation("CategoryToCategory")
+  products       Product[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Product {
+  id                 String      @id @default(cuid())
+  title              String
+  slug               String      @unique
+  sku                String      @unique
+  price              Float
+  originalPrice      Float?
+  discountPercentage Int?        @default(0)
+  categoryId         String
+  category           Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryName       String
+  images             String      // JSON stringified array of image URLs
+  sizes              String      // JSON stringified array of sizes
+  colors             String      // JSON stringified array of colors
+  description        String
+  details            String?     // JSON stringified array of detail points
+  inStock            Boolean     @default(true)
+  stockCount         Int         @default(20)
+  isFeatured         Boolean     @default(false)
+  isBestSeller       Boolean     @default(false)
+  isFlashSale        Boolean     @default(false)
+  isNewArrival       Boolean     @default(false)
+  rating             Float       @default(4.8)
+  reviewCount        Int         @default(12)
+  orderItems         OrderItem[]
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderId         String      @unique
+  customerName    String
+  customerPhone   String
+  customerEmail   String?
+  customerAddress String
+  customerCity    String
+  customerNotes   String?
+  paymentMethod   String      @default("Cash on Delivery")
+  subtotal        Float
+  shippingFee     Float       @default(80)
+  discount        Float       @default(0)
+  totalAmount     Float
+  status          String      @default("Pending")
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  title     String
+  price     Float
+  quantity  Int
+  size      String?
+  colorName String?
+  image     String?
+}
+
+model Banner {
+  id         String   @id @default(cuid())
+  title      String
+  subtitle   String?
+  buttonText String?
+  link       String?
+  image      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      String   @default("SUPER_ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SiteSettings {
+  id                  String   @id @default("default")
+  storeName           String   @default("TEX WEAR Life Style")
+  phone               String   @default("+8801623446677")
+  email               String   @default("support@texwear.com")
+  address             String   @default("House 42, Road 11, Block D, Banani, Dhaka")
+  marqueeAnnouncement String   @default("Welcome to TEX WEAR Life Style — Premium Fashion & Lifestyle | Home Delivery Nationwide!")
+  facebookUrl         String?  @default("https://facebook.com")
+  instagramUrl        String?  @default("https://instagram.com")
+  updatedAt           DateTime @updatedAt
+}
+
+model StoreLocation {
+  id         String   @id @default(cuid())
+  name       String
+  address    String
+  phone      String
+  hours      String   @default("10:00 AM - 9:30 PM (7 Days Open)")
+  mapUrl     String?
+  isFlagship Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

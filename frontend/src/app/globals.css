@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --dark-slate-bg: #0f172a;
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --gold-accent: #d4af37;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #f8fafc;
+  }
+}
+
+.bg-gold-gradient {
+  background: linear-gradient(135deg, #d4af37 0%, #f59e0b 50%, #b8860b 100%);
+}
+
+.bg-gold-gradient-hover:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #d4af37 50%, #c5a880 100%);
+}
+
+.text-gold-gradient {
+  background: linear-gradient(135deg, #d4af37 0%, #fef08a 50%, #b8860b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html, body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden !important;
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+/* Prevent image clipping and force responsive sizing */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* TEX WEAR Custom E-Commerce Animations */
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInZoom {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.4), 0 0 20px rgba(245, 158, 11, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(245, 158, 11, 0.8), 0 0 35px rgba(245, 158, 11, 0.5);
+    transform: scale(1.04);
+  }
+}
+
+@keyframes flipDigit {
+  0% {
+    transform: translateY(-8px) scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up-fade {
+  animation: slideUpFade 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in-zoom {
+  animation: fadeInZoom 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.2s infinite ease-in-out;
+}
+
+.animate-flip-digit {
+  animation: flipDigit 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animation-delay-150 {
+  animation-delay: 150ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animation-delay-450 {
+  animation-delay: 450ms;
+}
+
+.animation-delay-600 {
+  animation-delay: 600ms;
+}
+
+
