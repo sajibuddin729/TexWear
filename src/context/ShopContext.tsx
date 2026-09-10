@@ -76,31 +76,25 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     async function loadInitialData() {
       try {
-        // Trigger seed if database is empty
-        await fetch('/api/seed', { method: 'POST' }).catch(() => {});
+        // Fetch all APIs in parallel for instant page load speed
+        const [catRes, prodRes, orderRes, settingsRes, storesRes] = await Promise.allSettled([
+          fetch('/api/categories').then((r) => r.json()),
+          fetch('/api/products').then((r) => r.json()),
+          fetch('/api/orders').then((r) => r.json()),
+          fetch('/api/settings').then((r) => r.json()),
+          fetch('/api/stores').then((r) => r.json()),
+        ]);
 
-        // Fetch Categories
-        const catRes = await fetch('/api/categories').then((r) => r.json()).catch(() => null);
-        if (catRes?.success && Array.isArray(catRes.data) && catRes.data.length > 0) {
-          setCategories(catRes.data);
-        } else {
-          const savedCategories = localStorage.getItem(LOCAL_STORAGE_KEY_CATEGORIES);
-          if (savedCategories) setCategories(JSON.parse(savedCategories));
+        if (catRes.status === 'fulfilled' && catRes.value?.success && Array.isArray(catRes.value.data) && catRes.value.data.length > 0) {
+          setCategories(catRes.value.data);
         }
 
-        // Fetch Products
-        const prodRes = await fetch('/api/products').then((r) => r.json()).catch(() => null);
-        if (prodRes?.success && Array.isArray(prodRes.data) && prodRes.data.length > 0) {
-          setProducts(prodRes.data);
-        } else {
-          const savedProducts = localStorage.getItem(LOCAL_STORAGE_KEY_PRODUCTS);
-          if (savedProducts) setProducts(JSON.parse(savedProducts));
+        if (prodRes.status === 'fulfilled' && prodRes.value?.success && Array.isArray(prodRes.value.data) && prodRes.value.data.length > 0) {
+          setProducts(prodRes.value.data);
         }
 
-        // Fetch Orders
-        const orderRes = await fetch('/api/orders').then((r) => r.json()).catch(() => null);
-        if (orderRes?.success && Array.isArray(orderRes.data) && orderRes.data.length > 0) {
-          const mappedOrders: Order[] = orderRes.data.map((o: any) => ({
+        if (orderRes.status === 'fulfilled' && orderRes.value?.success && Array.isArray(orderRes.value.data) && orderRes.value.data.length > 0) {
+          const mappedOrders: Order[] = orderRes.value.data.map((o: any) => ({
             id: o.id,
             orderNumber: o.orderId,
             customer: {
@@ -131,21 +125,14 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
             createdAt: o.createdAt,
           }));
           setOrders(mappedOrders);
-        } else {
-          const savedOrders = localStorage.getItem(LOCAL_STORAGE_KEY_ORDERS);
-          if (savedOrders) setOrders(JSON.parse(savedOrders));
         }
 
-        // Fetch Settings
-        const settingsRes = await fetch('/api/settings').then((r) => r.json()).catch(() => null);
-        if (settingsRes?.success && settingsRes.settings) {
-          setSiteSettings(settingsRes.settings);
+        if (settingsRes.status === 'fulfilled' && settingsRes.value?.success && settingsRes.value.settings) {
+          setSiteSettings(settingsRes.value.settings);
         }
 
-        // Fetch Store Locations
-        const storesRes = await fetch('/api/stores').then((r) => r.json()).catch(() => null);
-        if (storesRes?.success && Array.isArray(storesRes.stores) && storesRes.stores.length > 0) {
-          setStoreLocations(storesRes.stores);
+        if (storesRes.status === 'fulfilled' && storesRes.value?.success && Array.isArray(storesRes.value.stores) && storesRes.value.stores.length > 0) {
+          setStoreLocations(storesRes.value.stores);
         }
 
         const savedCart = localStorage.getItem(LOCAL_STORAGE_KEY_CART);
