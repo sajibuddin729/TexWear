@@ -17,7 +17,7 @@ export const Logo: React.FC<LogoProps> = ({
         alt="TEX WEAR Life Style"
         className="h-10 sm:h-12 md:h-14 w-auto object-contain"
         onError={(e) => {
-          (e.target as HTMLImageElement).src = '/update_logo.png.png';
+          (e.target as HTMLImageElement).src = '/update_logo.png';
         }}
       />
     </Link>

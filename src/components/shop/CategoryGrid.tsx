@@ -39,7 +39,7 @@ export const CategoryGrid: React.FC = () => {
         <div className="flex flex-wrap justify-evenly gap-y-6 sm:gap-y-8">
           {!categoriesLoaded
             ? /* Skeleton loaders — shown before API responds, prevents flash */
-              Array.from({ length: 5 }).map((_, i) => (
+              Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
                   className="flex flex-col items-center text-center gap-3"
