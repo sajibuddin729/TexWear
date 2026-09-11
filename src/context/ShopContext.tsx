@@ -21,7 +21,7 @@ interface ShopContextType {
   setIsSearchOpen: (open: boolean) => void;
   quickOrderProduct: Product | null;
   setQuickOrderProduct: (product: Product | null) => void;
-  
+
   // Cart Actions
   addToCart: (product: Product, selectedSize?: string, selectedColor?: { name: string; hex: string }, qty?: number) => void;
   removeFromCart: (productId: string, size: string, colorName: string) => void;
@@ -68,7 +68,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettingsData>(INITIAL_SETTINGS);
   const [storeLocations, setStoreLocations] = useState<StoreLocationData[]>(INITIAL_STORES);
-  
+
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [quickOrderProduct, setQuickOrderProduct] = useState<Product | null>(null);
@@ -115,7 +115,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 id: i.productId,
                 title: i.title,
                 price: i.price,
-                images: [i.image || '/updated_logo_textware.png'],
+                images: [i.image || '/update_logo.png'],
               } as Product,
               selectedSize: i.size || 'Standard',
               selectedColor: { name: i.colorName || 'Default', hex: '#000' },
@@ -290,7 +290,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Order => {
     const itemsToOrder = customCart || cart;
     const subtotal = itemsToOrder.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-    
+
     let shippingFee = 70;
     if (customer.districtArea === 'suburbs_dhaka') shippingFee = 100;
     if (customer.districtArea === 'outside_dhaka') shippingFee = 130;
@@ -339,7 +339,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setOrders((prev) => [newOrder, ...prev]);
     if (!customCart) clearCart();
-    
+
     toast.success('Order Placed Successfully!', { duration: 4000 });
     return newOrder;
   };

@@ -13,7 +13,7 @@ export const Footer: React.FC = () => {
     <footer className="bg-[#0B132B] text-slate-400 border-t border-slate-800/80 pt-12 pb-8">
       {/* Features Bar */}
       <div className="max-w-7xl mx-auto px-4 pb-12 border-b border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#1E293B] border border-[#334155]">
+        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#0F172A] border border-slate-800">
           <div className="p-2 rounded-xl bg-amber-500/10 shrink-0">
             <img src="/fast-delivery.png" alt="Fast Home Delivery" className="w-7 h-7 object-contain" />
           </div>
@@ -23,7 +23,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#1E293B] border border-[#334155]">
+        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#0F172A] border border-slate-800">
           <div className="p-2 rounded-xl bg-emerald-500/10 shrink-0">
             <img src="/cash-on-delivery.png" alt="Cash on Delivery" className="w-7 h-7 object-contain" />
           </div>
@@ -33,7 +33,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#1E293B] border border-[#334155]">
+        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#0F172A] border border-slate-800">
           <div className="p-2 rounded-xl bg-pink-500/10 shrink-0">
             <img src="/hassle-free.png" alt="Easy Exchanges" className="w-7 h-7 object-contain" />
           </div>
@@ -43,7 +43,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#1E293B] border border-[#334155]">
+        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#0F172A] border border-slate-800">
           <div className="p-2 rounded-xl bg-amber-500/10 shrink-0">
             <img src="/authenticity.png" alt="100% Original" className="w-7 h-7 object-contain" />
           </div>

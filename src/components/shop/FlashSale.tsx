@@ -36,38 +36,38 @@ export const FlashSale: React.FC = () => {
   if (flashSaleProducts.length === 0) return null;
 
   return (
-    <section className="py-8 sm:py-12 bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white relative overflow-hidden border-y border-[#D4AF37]/30 shadow-inner">
+    <section className="py-8 sm:py-12 bg-gradient-to-r from-amber-500/10 via-amber-50 to-amber-500/10 text-slate-900 relative overflow-hidden border-y border-amber-300/60 shadow-xs">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 relative z-10">
         {/* Header with Countdown */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8 pb-4 border-b border-white/10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8 pb-4 border-b border-amber-200/80">
           <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="p-2 sm:p-3 bg-gradient-to-r from-[#D4AF37] to-amber-500 text-slate-950 rounded-xl font-black shadow-lg shrink-0 animate-pulse-glow">
+            <div className="p-2 sm:p-3 bg-gradient-to-r from-[#D4AF37] to-amber-500 text-slate-950 rounded-xl font-black shadow-md shrink-0 animate-pulse-glow">
               <Zap className="w-5 h-5 sm:w-6 sm:h-6 fill-slate-950 animate-bounce" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-2xl md:text-3xl font-black uppercase tracking-tight text-white flex items-center gap-2">
+              <h2 className="text-lg sm:text-2xl md:text-3xl font-black uppercase tracking-tight text-slate-950 flex items-center gap-2">
                 Flash Sale Offers
               </h2>
-              <p className="text-[11px] sm:text-xs text-amber-300 font-medium">
+              <p className="text-[11px] sm:text-xs text-amber-900 font-bold">
                 Limited time deals on signature Tex Wear fashion line!
               </p>
             </div>
           </div>
 
           {/* Countdown Clock with Flip Animation */}
-          <div className="flex items-center gap-2 bg-[#0F172A]/90 px-3.5 py-2 sm:px-4 sm:py-2 rounded-xl border border-[#D4AF37]/40 backdrop-blur-md shrink-0 self-start sm:self-auto shadow-xl">
-            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D4AF37] shrink-0 animate-pulse" />
-            <span className="text-[10px] sm:text-xs text-slate-300 font-bold uppercase tracking-wider">Ends In:</span>
-            <div className="flex items-center gap-1 font-black text-xs sm:text-sm text-[#D4AF37]">
-              <span key={`hrs-${timeLeft.hours}`} className="inline-block bg-[#1E293B] px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md border border-slate-700 shadow-inner animate-flip-digit text-amber-300">
+          <div className="flex items-center gap-2 bg-white px-3.5 py-2 sm:px-4 sm:py-2 rounded-xl border border-amber-300 shrink-0 self-start sm:self-auto shadow-md">
+            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 shrink-0 animate-pulse" />
+            <span className="text-[10px] sm:text-xs text-slate-700 font-bold uppercase tracking-wider">Ends In:</span>
+            <div className="flex items-center gap-1 font-black text-xs sm:text-sm text-slate-950">
+              <span key={`hrs-${timeLeft.hours}`} className="inline-block bg-slate-950 text-amber-300 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md shadow-inner animate-flip-digit">
                 {String(timeLeft.hours).padStart(2, '0')}h
               </span>
               <span>:</span>
-              <span key={`min-${timeLeft.minutes}`} className="inline-block bg-[#1E293B] px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md border border-slate-700 shadow-inner animate-flip-digit text-amber-300">
+              <span key={`min-${timeLeft.minutes}`} className="inline-block bg-slate-950 text-amber-300 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md shadow-inner animate-flip-digit">
                 {String(timeLeft.minutes).padStart(2, '0')}m
               </span>
               <span>:</span>
-              <span key={`sec-${timeLeft.seconds}`} className="inline-block bg-[#1E293B] px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md border border-slate-700 shadow-inner animate-flip-digit text-amber-300">
+              <span key={`sec-${timeLeft.seconds}`} className="inline-block bg-slate-950 text-amber-300 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md shadow-inner animate-flip-digit">
                 {String(timeLeft.seconds).padStart(2, '0')}s
               </span>
             </div>

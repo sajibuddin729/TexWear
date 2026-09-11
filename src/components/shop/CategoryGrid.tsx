@@ -15,21 +15,21 @@ export const CategoryGrid: React.FC = () => {
   const featuredCats = topLevelCats.slice(0, 8);
 
   return (
-    <section className="py-8 sm:py-12 bg-white dark:bg-[#0F172A] border-b border-slate-100 dark:border-[#1E293B]">
+    <section className="py-8 sm:py-12 bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-6 sm:mb-10">
           <div>
-            <h2 className="text-lg sm:text-xl md:text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-white">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black uppercase tracking-tight text-slate-950">
               Shop By Category
             </h2>
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <p className="text-[11px] sm:text-xs text-slate-600 font-medium">
               Explore TEX WEAR exclusive fashion lines
             </p>
           </div>
           <Link
             href="/shop"
-            className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400 hover:underline whitespace-nowrap self-start sm:self-auto"
+            className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-600 hover:underline whitespace-nowrap self-start sm:self-auto"
           >
             View All Categories →
           </Link>
@@ -45,8 +45,8 @@ export const CategoryGrid: React.FC = () => {
                   className="flex flex-col items-center text-center gap-3"
                   style={{ flex: '1 1 0', minWidth: 72, maxWidth: 200 }}
                 >
-                  <div className="w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full bg-slate-200 dark:bg-[#1E293B] animate-pulse" />
-                  <div className="h-3 w-16 rounded bg-slate-200 dark:bg-[#1E293B] animate-pulse" />
+                  <div className="w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full bg-slate-200 animate-pulse" />
+                  <div className="h-3 w-16 rounded bg-slate-200 animate-pulse" />
                 </div>
               ))
             : featuredCats.map((cat) => (
@@ -57,7 +57,7 @@ export const CategoryGrid: React.FC = () => {
                   style={{ flex: '1 1 0', minWidth: 72, maxWidth: 200 }}
                 >
                   {/* Circle image */}
-                  <div className="w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-2 border-slate-200 dark:border-[#334155] group-hover:border-[#D4AF37] group-hover:ring-4 group-hover:ring-[#D4AF37]/30 shadow-sm group-hover:shadow-xl transition-all duration-500 group-hover:scale-110 bg-slate-100 dark:bg-[#1E293B]">
+                  <div className="w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-2 border-slate-200 group-hover:border-[#D4AF37] group-hover:ring-4 group-hover:ring-[#D4AF37]/30 shadow-sm group-hover:shadow-xl transition-all duration-500 group-hover:scale-110 bg-slate-100">
                     <img
                       src={cat.image || DEFAULT_CATEGORY_IMAGE}
                       alt={cat.name}
@@ -68,7 +68,7 @@ export const CategoryGrid: React.FC = () => {
                     />
                   </div>
                   {/* Label */}
-                  <span className="text-[10px] sm:text-xs md:text-[13px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors duration-300 line-clamp-2 leading-tight px-1">
+                  <span className="text-[10px] sm:text-xs md:text-[13px] font-black uppercase tracking-wider text-slate-900 group-hover:text-amber-600 transition-colors duration-300 line-clamp-2 leading-tight px-1">
                     {cat.name}
                   </span>
                 </Link>

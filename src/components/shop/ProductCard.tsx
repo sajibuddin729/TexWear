@@ -21,9 +21,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const hoverImage = product.images[1] || mainImage;
 
   return (
-    <div className="group relative bg-white dark:bg-[#1E293B] rounded-xl sm:rounded-2xl border border-slate-200 dark:border-[#334155] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col justify-between hover:border-amber-400/50">
+    <div className="group relative bg-white rounded-xl sm:rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between hover:border-amber-400">
       {/* Top Image Container */}
-      <div className="relative w-full aspect-[4/5] bg-slate-100 dark:bg-[#0F172A] overflow-hidden shrink-0" style={{ aspectRatio: '4 / 5' }}>
+      <div className="relative w-full aspect-[4/5] bg-slate-100 overflow-hidden shrink-0" style={{ aspectRatio: '4 / 5' }}>
         <Link href={`/product/${product.slug}`} className="absolute inset-0 w-full h-full block">
           <img
             src={mainImage}
@@ -64,7 +64,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           onClick={() => toggleWishlist(product.id)}
           className={`absolute top-2 right-2 p-1.5 sm:p-2 rounded-full backdrop-blur-md transition-all duration-300 z-10 shadow-md hover:scale-110 active:scale-95 ${isWishlisted
               ? 'bg-pink-600 text-white scale-105'
-              : 'bg-white/80 dark:bg-[#0F172A]/80 text-slate-700 dark:text-slate-200 hover:bg-pink-600 hover:text-white'
+              : 'bg-white/90 text-slate-700 hover:bg-pink-600 hover:text-white border border-slate-200'
             }`}
           title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
         >
@@ -84,13 +84,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </div>
 
       {/* Details Container */}
-      <div className="p-2.5 sm:p-4 flex flex-col flex-1 justify-between space-y-2 sm:space-y-3 bg-white dark:bg-[#1E293B]">
+      <div className="p-2.5 sm:p-4 flex flex-col flex-1 justify-between space-y-2 sm:space-y-3 bg-white">
         <div>
-          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest block truncate">
+          <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest block truncate">
             {product.categoryName}
           </span>
           <Link href={`/product/${product.slug}`}>
-            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 line-clamp-2 hover:text-amber-500 dark:hover:text-amber-400 transition-colors mt-0.5 leading-snug">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 line-clamp-2 hover:text-amber-600 transition-colors mt-0.5 leading-snug">
               {product.title}
             </h3>
           </Link>
@@ -98,26 +98,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
         {/* Rating & Stock */}
         <div className="flex items-center justify-between text-[10px] sm:text-xs">
-          <div className="flex items-center gap-1 text-amber-400 font-bold">
+          <div className="flex items-center gap-1 text-amber-500 font-bold">
             <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-400 shrink-0" />
             <span>{product.rating}</span>
             <span className="text-slate-400 font-normal">({product.reviewCount})</span>
           </div>
           {product.inStock ? (
-            <span className="text-[9px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
+            <span className="text-[9px] sm:text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-300">
               In Stock
             </span>
           ) : (
-            <span className="text-[9px] sm:text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-950/60 px-1.5 py-0.5 rounded-full border border-red-500/20">
+            <span className="text-[9px] sm:text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-full border border-red-200">
               Out of Stock
             </span>
           )}
         </div>
 
         {/* Price & Action Buttons */}
-        <div className="pt-2 border-t border-slate-100 dark:border-[#334155]/80 flex items-center justify-between gap-1">
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-1">
           <div className="flex flex-col">
-            <span className="text-sm sm:text-lg font-black text-slate-900 dark:text-amber-400 leading-none">
+            <span className="text-sm sm:text-lg font-black text-slate-950 leading-none">
               ৳{product.price.toLocaleString()}
             </span>
             {product.originalPrice && product.originalPrice > product.price && (
@@ -129,7 +129,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
           <button
             onClick={() => addToCart(product)}
-            className="p-1.5 sm:p-2 rounded-xl bg-slate-100 dark:bg-[#0F172A] hover:bg-[#D4AF37] text-slate-700 dark:text-white hover:text-slate-950 border border-slate-200 dark:border-[#334155] hover:border-amber-400 transition-all shadow-md shrink-0 flex items-center justify-center group/btn"
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-[#D4AF37] text-slate-800 hover:text-slate-950 border border-slate-200 hover:border-amber-400 transition-all shadow-xs shrink-0 flex items-center justify-center group/btn"
             title="Add to Cart"
           >
             <img src="/add-to-cart.png" alt="Add to Cart" className="w-4 h-4 sm:w-5 sm:h-5 object-contain transition-transform group-hover/btn:scale-110" />

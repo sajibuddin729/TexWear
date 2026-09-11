@@ -29,13 +29,13 @@ export const HeroSlider: React.FC = () => {
   const currentBanner = banners[currentIndex];
 
   return (
-    <div className="relative w-full overflow-hidden bg-slate-950 group -mt-[125px] sm:-mt-[135px] lg:-mt-[145px]">
+    <div className="relative w-full overflow-hidden bg-gradient-to-b from-slate-100 via-white to-slate-50 border-b border-slate-200 group">
       {/* Background Ambient Blur with Crossfade Transition */}
       {banners.map((banner, idx) => (
         <div
           key={`ambient-${banner.id || idx}`}
           className={`absolute inset-0 z-0 overflow-hidden transition-all duration-1000 ease-in-out ${
-            idx === currentIndex ? 'opacity-40 scale-125' : 'opacity-0 scale-135 pointer-events-none'
+            idx === currentIndex ? 'opacity-15 scale-125' : 'opacity-0 scale-135 pointer-events-none'
           }`}
         >
           <img
@@ -43,27 +43,27 @@ export const HeroSlider: React.FC = () => {
             alt="Ambient Background"
             className="w-full h-full object-cover filter blur-3xl"
           />
-          <div className="absolute inset-0 bg-slate-950/75" />
+          <div className="absolute inset-0 bg-white/60" />
         </div>
       ))}
 
       {/* Main Grid Container */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[145px] sm:pt-[155px] lg:pt-[165px] pb-10 sm:pb-14 min-h-[580px] lg:min-h-[660px] flex items-center">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 lg:py-16 min-h-[520px] lg:min-h-[580px] flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center w-full">
           
           {/* Left Column: Typography & CTAs with Smooth Slow Text Reveal */}
-          <div key={`hero-text-${currentIndex}`} className="lg:col-span-7 space-y-4 sm:space-y-6 text-white text-center lg:text-left z-10">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#D4AF37]/20 text-amber-300 rounded-full font-bold text-xs uppercase tracking-widest border border-[#D4AF37]/40 backdrop-blur-md shadow-lg animate-slide-up-fade">
-              <Sparkles className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
+          <div key={`hero-text-${currentIndex}`} className="lg:col-span-7 space-y-4 sm:space-y-6 text-slate-900 text-center lg:text-left z-10">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#D4AF37]/15 text-amber-900 rounded-full font-extrabold text-xs uppercase tracking-widest border border-[#D4AF37]/40 shadow-xs animate-slide-up-fade">
+              <Sparkles className="w-4 h-4 text-amber-600 shrink-0 animate-pulse" />
               <span>TEX WEAR EXCLUSIVE 2026</span>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight leading-tight sm:leading-none text-white drop-shadow-2xl animate-slide-up-fade animation-delay-150">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight leading-tight sm:leading-none text-slate-950 drop-shadow-xs animate-slide-up-fade animation-delay-150">
               {currentBanner.title}
             </h1>
 
             {currentBanner.subtitle && (
-              <p className="text-sm sm:text-base lg:text-lg text-slate-300 font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed drop-shadow-md animate-slide-up-fade animation-delay-300">
+              <p className="text-sm sm:text-base lg:text-lg text-slate-600 font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed animate-slide-up-fade animation-delay-300">
                 {currentBanner.subtitle}
               </p>
             )}
@@ -71,7 +71,7 @@ export const HeroSlider: React.FC = () => {
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-slide-up-fade animation-delay-450">
               <Link
                 href={currentBanner.link}
-                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#D4AF37] via-amber-400 to-[#B8860B] hover:brightness-110 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl shadow-2xl shadow-amber-500/20 flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 border border-amber-300/50"
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#D4AF37] via-amber-400 to-[#B8860B] hover:brightness-110 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl shadow-xl flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 border border-amber-300/60"
               >
                 <span>{currentBanner.buttonText}</span>
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -79,13 +79,13 @@ export const HeroSlider: React.FC = () => {
             </div>
 
             {/* Feature Badges */}
-            <div className="pt-4 flex items-center justify-center lg:justify-start gap-6 text-xs font-bold text-slate-400 border-t border-white/10 animate-slide-up-fade animation-delay-600">
+            <div className="pt-4 flex items-center justify-center lg:justify-start gap-6 text-xs font-bold text-slate-700 border-t border-slate-200 animate-slide-up-fade animation-delay-600">
               <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>100% Premium Quality Guarantee</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Truck className="w-4 h-4 text-amber-400 shrink-0" />
+                <Truck className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>Express Delivery Bangladesh</span>
               </div>
             </div>
@@ -93,7 +93,7 @@ export const HeroSlider: React.FC = () => {
 
           {/* Right Column: Framed Model Image Showcase with Smooth Crossfade */}
           <div className="lg:col-span-5 flex justify-center lg:justify-end z-10 relative">
-            <div className="relative w-full max-w-[340px] sm:max-w-[380px] lg:max-w-[420px] aspect-[4/5] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl bg-[#1E293B] group-hover:border-[#D4AF37]/60 transition-all duration-500" style={{ aspectRatio: '4/5' }}>
+            <div className="relative w-full max-w-[340px] sm:max-w-[380px] lg:max-w-[420px] aspect-[4/5] rounded-3xl overflow-hidden border-2 border-slate-200 shadow-2xl bg-white group-hover:border-[#D4AF37] transition-all duration-500" style={{ aspectRatio: '4/5' }}>
               {banners.map((banner, idx) => (
                 <div
                   key={`card-${banner.id || idx}`}
@@ -108,8 +108,8 @@ export const HeroSlider: React.FC = () => {
                     alt={banner.title}
                     className="w-full h-full object-cover object-top transition-transform duration-1000 hover:scale-108"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/90 via-transparent to-transparent pointer-events-none" />
-                  <div className="absolute bottom-4 inset-x-4 p-3.5 rounded-2xl bg-[#0F172A]/90 backdrop-blur-md border border-white/10 text-white flex items-center justify-between shadow-lg">
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-4 inset-x-4 p-3.5 rounded-2xl bg-slate-950/90 backdrop-blur-md border border-slate-800 text-white flex items-center justify-between shadow-lg">
                     <div>
                       <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">Collection Highlight</span>
                       <span className="text-xs sm:text-sm font-extrabold line-clamp-1">{banner.title}</span>
@@ -129,7 +129,7 @@ export const HeroSlider: React.FC = () => {
       {/* Navigation Arrows */}
       <button
         onClick={prevSlide}
-        className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#0F172A]/80 hover:bg-[#D4AF37] hover:text-slate-950 text-white flex items-center justify-center backdrop-blur-md border border-white/20 transition-all z-20 shadow-xl active:scale-95"
+        className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/90 hover:bg-[#D4AF37] hover:text-slate-950 text-slate-900 flex items-center justify-center backdrop-blur-md border border-slate-300 transition-all z-20 shadow-md active:scale-95"
         aria-label="Previous Slide"
       >
         <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -137,7 +137,7 @@ export const HeroSlider: React.FC = () => {
 
       <button
         onClick={nextSlide}
-        className="absolute right-3 sm:left-auto sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#0F172A]/80 hover:bg-[#D4AF37] hover:text-slate-950 text-white flex items-center justify-center backdrop-blur-md border border-white/20 transition-all z-20 shadow-xl active:scale-95"
+        className="absolute right-3 sm:left-auto sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/90 hover:bg-[#D4AF37] hover:text-slate-950 text-slate-900 flex items-center justify-center backdrop-blur-md border border-slate-300 transition-all z-20 shadow-md active:scale-95"
         aria-label="Next Slide"
       >
         <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -150,7 +150,7 @@ export const HeroSlider: React.FC = () => {
             key={idx}
             onClick={() => setCurrentIndex(idx)}
             className={`h-2.5 rounded-full transition-all duration-500 ${
-              idx === currentIndex ? 'w-8 bg-[#D4AF37] shadow-md' : 'w-2.5 bg-white/40 hover:bg-white'
+              idx === currentIndex ? 'w-8 bg-[#D4AF37] shadow-md' : 'w-2.5 bg-slate-300 hover:bg-slate-400'
             }`}
             aria-label={`Go to slide ${idx + 1}`}
           />

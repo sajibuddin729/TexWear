@@ -2,18 +2,11 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a;
   --dark-slate-bg: #0f172a;
-  --card-bg: #1e293b;
-  --card-border: #334155;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
   --gold-accent: #d4af37;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f8fafc;
-  }
 }
 
 .bg-gold-gradient {

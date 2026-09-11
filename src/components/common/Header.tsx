@@ -55,19 +55,11 @@ export const Header: React.FC = () => {
 
   return (
     <header
-      className={
-        isHomePage
-          ? 'sticky top-0 z-40 w-full bg-[#0F172A]/90 backdrop-blur-md border-b border-white/10 text-white shadow-2xl'
-          : 'sticky top-0 z-40 w-full bg-[#0F172A] border-b border-slate-800 text-white shadow-md'
-      }
+      className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 text-slate-900 shadow-sm"
     >
       {/* Top Announcement Bar / Marquee */}
       <div
-        className={
-          isHomePage
-            ? 'bg-[#0B132B] text-white text-[11px] sm:text-xs py-1.5 px-3 border-b border-white/10 w-full overflow-hidden'
-            : 'bg-[#0B132B] text-white text-[11px] sm:text-xs py-1.5 px-3 border-b border-slate-800 w-full overflow-hidden'
-        }
+        className="bg-[#071B3B] text-white text-[11px] sm:text-xs py-1.5 px-3 border-b border-slate-800 w-full overflow-hidden"
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 w-full">
           {/* Marquee message */}
@@ -108,11 +100,11 @@ export const Header: React.FC = () => {
       </div>
 
       {/* Middle Header */}
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-0 flex items-center justify-between gap-1.5 sm:gap-4 w-full">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2.5 flex items-center justify-between gap-1.5 sm:gap-4 w-full">
         {/* Mobile Menu Button */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden p-1.5 rounded-lg text-slate-200 hover:bg-white/10 transition-colors shrink-0"
+          className="lg:hidden p-1.5 rounded-lg text-slate-800 hover:bg-slate-100 transition-colors shrink-0"
           aria-label="Toggle menu"
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -127,12 +119,12 @@ export const Header: React.FC = () => {
         <div className="hidden lg:flex flex-1 max-w-md mx-6">
           <div
             onClick={() => setIsSearchOpen(true)}
-            className="w-full flex items-center justify-between px-4 py-2 bg-[#1E293B] border border-slate-700/80 rounded-full text-slate-300 hover:border-amber-400/60 hover:bg-[#1E293B]/90 cursor-pointer shadow-inner transition-all group backdrop-blur-xs"
+            className="w-full flex items-center justify-between px-4 py-2 bg-slate-100/90 border border-slate-300 rounded-full text-slate-600 hover:border-amber-500 hover:bg-slate-100 cursor-pointer shadow-xs transition-all group"
           >
-            <span className="text-xs sm:text-sm font-medium group-hover:text-white truncate">
+            <span className="text-xs sm:text-sm font-medium group-hover:text-slate-900 truncate">
               Search Panjabi, Shirts, Kameez, Accessories...
             </span>
-            <div className="p-1 rounded-full bg-[#D4AF37] text-slate-950 shrink-0 ml-2">
+            <div className="p-1 rounded-full bg-[#D4AF37] text-slate-950 shrink-0 ml-2 shadow-xs">
               <Search className="w-4 h-4" />
             </div>
           </div>
@@ -143,7 +135,7 @@ export const Header: React.FC = () => {
           {/* Search Button (Mobile & Tablet) */}
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="lg:hidden p-1.5 rounded-full text-slate-200 hover:bg-white/10"
+            className="lg:hidden p-1.5 rounded-full text-slate-800 hover:bg-slate-100"
             title="Search"
           >
             <Search className="w-5 h-5" />
@@ -152,12 +144,12 @@ export const Header: React.FC = () => {
           {/* Wishlist Link */}
           <Link
             href="/wishlist"
-            className="relative p-1.5 text-slate-200 hover:text-amber-400 transition-colors"
+            className="relative p-1.5 text-slate-800 hover:text-amber-600 transition-colors"
             title="Wishlist"
           >
             <Heart className="w-5 h-5" />
             {wishlist.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-pink-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-slate-900">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-pink-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
                 {wishlist.length}
               </span>
             )}
@@ -166,11 +158,11 @@ export const Header: React.FC = () => {
           {/* Cart Button */}
           <button
             onClick={() => setIsCartOpen(true)}
-            className="relative flex items-center gap-1 px-2.5 py-1.5 bg-[#1E293B] text-amber-400 rounded-full hover:bg-[#D4AF37] hover:text-slate-950 transition-all border border-slate-700/80 shadow-xs group"
+            className="relative flex items-center gap-1 px-3 py-1.5 bg-slate-100 text-slate-900 rounded-full hover:bg-[#D4AF37] hover:text-slate-950 transition-all border border-slate-300 shadow-xs group font-bold"
             title="Shopping Cart"
           >
             <div className="relative">
-              <ShoppingCart className="w-4 h-4" />
+              <ShoppingCart className="w-4 h-4 text-slate-900 group-hover:text-slate-950" />
               {cartCount > 0 && (
                 <span className="absolute -top-2 -right-2 w-4 h-4 bg-[#D4AF37] group-hover:bg-slate-950 group-hover:text-amber-400 text-slate-950 text-[10px] font-black rounded-full flex items-center justify-center">
                   {cartCount}
@@ -185,7 +177,7 @@ export const Header: React.FC = () => {
           {/* Direct Order Quick Access Button - Metallic Gold Accent */}
           <Link
             href="/checkout"
-            className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[#D4AF37] via-amber-400 to-[#B8860B] hover:brightness-110 text-slate-950 font-black text-xs uppercase tracking-wider rounded-full shadow-xl transition-all hover:scale-105 border border-amber-300/60"
+            className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[#D4AF37] via-amber-400 to-[#B8860B] hover:brightness-110 text-slate-950 font-black text-xs uppercase tracking-wider rounded-full shadow-md transition-all hover:scale-105 border border-amber-300/60"
           >
             <Zap className="w-3.5 h-3.5 fill-slate-950 shrink-0" />
             <span>Order Now</span>
@@ -195,22 +187,17 @@ export const Header: React.FC = () => {
 
       {/* Main Dropdown Mega Navigation Bar (Desktop Multi-Level) */}
       <nav
-        className={
-          isHomePage
-            ? 'hidden lg:block bg-[#0B132B]/90 text-white border-t border-white/10 shadow-md'
-            : 'hidden lg:block bg-[#0B132B] text-white border-t border-slate-800 shadow-md'
-        }
+        className="hidden lg:block bg-white text-slate-900 border-t border-slate-200 shadow-xs"
       >
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-center">
-          <ul className="flex items-center gap-1 font-bold text-xs uppercase tracking-wider">
+          <ul className="flex items-center gap-1 font-bold text-xs uppercase tracking-wider text-slate-900">
             {mainCategories.map((cat) => {
               const subcats = categories.filter((sub) => sub.parentId === cat.id);
               return (
                 <li key={cat.id} className="relative group">
                   <Link
                     href={`/category/${cat.slug}`}
-                    className="flex items-center gap-1 py-3 px-4 hover:bg-white/10 hover:text-sky-400 transition-colors rounded-xs"
-                    style={cat.highlightColor ? { color: cat.highlightColor } : undefined}
+                    className="flex items-center gap-1 py-3 px-4 text-slate-900 hover:bg-slate-100 hover:text-amber-600 transition-colors rounded-xs font-black"
                   >
                     <span>{cat.name}</span>
                     {subcats.length > 0 && <ChevronDown className="w-3.5 h-3.5 opacity-70" />}
@@ -218,16 +205,16 @@ export const Header: React.FC = () => {
 
                   {/* 1st Level Submenu Dropdown */}
                   {subcats.length > 0 && (
-                    <div className="absolute top-full left-0 hidden group-hover:block w-60 bg-[#0F172A] border border-slate-700/80 shadow-2xl rounded-b-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                      <ul className="py-2 divide-y divide-slate-800/60">
+                    <div className="absolute top-full left-0 hidden group-hover:block w-60 bg-white border border-slate-200 shadow-xl rounded-b-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <ul className="py-2 divide-y divide-slate-100">
                         {subcats.map((sub) => (
                           <li key={sub.id}>
                             <Link
                               href={`/category/${sub.slug}`}
-                              className="flex items-center justify-between px-4 py-2.5 text-xs text-slate-300 hover:text-slate-950 hover:bg-gradient-to-r hover:from-[#D4AF37] hover:to-amber-400 transition-colors font-bold"
+                              className="flex items-center justify-between px-4 py-2.5 text-xs text-slate-800 hover:text-slate-950 hover:bg-amber-50 transition-colors font-bold"
                             >
                               <span>{sub.name}</span>
-                              <ChevronRight className="w-3.5 h-3.5 opacity-70" />
+                              <ChevronRight className="w-3.5 h-3.5 text-amber-600" />
                             </Link>
                           </li>
                         ))}
@@ -241,7 +228,7 @@ export const Header: React.FC = () => {
             <li>
               <Link
                 href="/shop"
-                className="flex items-center gap-1 py-3 px-4 hover:bg-sky-600 text-sky-400 hover:text-white transition-colors rounded-xs font-black"
+                className="flex items-center gap-1 py-3 px-4 text-amber-600 hover:bg-amber-500 hover:text-slate-950 transition-colors rounded-xs font-black"
               >
                 <span>ALL PRODUCTS</span>
               </Link>
