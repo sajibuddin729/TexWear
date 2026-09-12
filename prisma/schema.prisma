@@ -129,3 +129,17 @@ model StoreLocation {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
+
+model Feedback {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  rating    Int      @default(5)
+  category  String   @default("General")
+  comment   String
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+

@@ -117,4 +117,49 @@ img {
   animation-delay: 600ms;
 }
 
+@keyframes slideInFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-48px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  0% {
+    opacity: 0;
+    transform: translateX(48px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes reviewCardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(32px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInFromLeft 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInFromRight 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-review-entrance {
+  animation: reviewCardEntrance 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 

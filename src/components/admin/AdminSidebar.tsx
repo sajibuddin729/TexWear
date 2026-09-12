@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
 import { useAdminAuth } from '@/context/AdminAuthContext';
-import { LayoutDashboard, Package, FolderTree, ShoppingBag, Settings, ArrowLeft, Shield, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, FolderTree, ShoppingBag, Settings, ArrowLeft, Shield, LogOut, MessageSquareHeart } from 'lucide-react';
 
 export const AdminSidebar: React.FC = () => {
   const pathname = usePathname();
@@ -16,6 +16,7 @@ export const AdminSidebar: React.FC = () => {
     { href: '/admintexwear/products', label: 'Products', icon: Package },
     { href: '/admintexwear/categories', label: 'Categories', icon: FolderTree },
     { href: '/admintexwear/orders', label: 'Orders', icon: ShoppingBag },
+    { href: '/admintexwear/feedback', label: 'Customer Feedback', icon: MessageSquareHeart },
     { href: '/admintexwear/settings', label: 'Store Settings', icon: Settings },
   ];
 

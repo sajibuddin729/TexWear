@@ -2,60 +2,65 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Logo } from './Logo';
 import { PhoneCall, Mail, MapPin, ShieldCheck, Truck, RefreshCw, Award } from 'lucide-react';
 import { useShop } from '@/context/ShopContext';
 
 export const Footer: React.FC = () => {
   const { siteSettings } = useShop();
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
 
   return (
-    <footer className="bg-[#0B132B] text-slate-400 border-t border-slate-800/80 pt-12 pb-8">
-      {/* Features Bar */}
-      <div className="max-w-7xl mx-auto px-4 pb-12 border-b border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#0F172A] border border-slate-800">
-          <div className="p-2 rounded-xl bg-amber-500/10 shrink-0">
-            <img src="/fast-delivery.png" alt="Fast Home Delivery" className="w-7 h-7 object-contain" />
+    <footer className={`bg-[#0B132B] text-slate-400 border-t border-slate-800/80 pb-8 ${isHomePage ? 'pt-8' : 'pt-12'}`}>
+      {/* Features Bar - hidden on homepage (which already has Why Shop section), displayed on all other pages */}
+      {!isHomePage && (
+        <div className="max-w-7xl mx-auto px-4 pb-12 border-b border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-[#0F172A] border border-slate-800">
+            <div className="p-2 rounded-xl bg-amber-500/10 shrink-0">
+              <img src="/fast-delivery.png" alt="Fast Home Delivery" className="w-7 h-7 object-contain" />
+            </div>
+            <div>
+              <h4 className="text-white font-bold text-sm">Fast Home Delivery</h4>
+              <p className="text-xs text-slate-400">Across Dhaka & all Bangladesh</p>
+            </div>
           </div>
-          <div>
-            <h4 className="text-white font-bold text-sm">Fast Home Delivery</h4>
-            <p className="text-xs text-slate-400">Across Dhaka & all Bangladesh</p>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#0F172A] border border-slate-800">
-          <div className="p-2 rounded-xl bg-emerald-500/10 shrink-0">
-            <img src="/cash-on-delivery.png" alt="Cash on Delivery" className="w-7 h-7 object-contain" />
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-[#0F172A] border border-slate-800">
+            <div className="p-2 rounded-xl bg-emerald-500/10 shrink-0">
+              <img src="/cash-on-delivery.png" alt="Cash on Delivery" className="w-7 h-7 object-contain" />
+            </div>
+            <div>
+              <h4 className="text-white font-bold text-sm">Cash on Delivery</h4>
+              <p className="text-xs text-slate-400">Pay when you receive your order</p>
+            </div>
           </div>
-          <div>
-            <h4 className="text-white font-bold text-sm">Cash on Delivery</h4>
-            <p className="text-xs text-slate-400">Pay when you receive your order</p>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#0F172A] border border-slate-800">
-          <div className="p-2 rounded-xl bg-pink-500/10 shrink-0">
-            <img src="/hassle-free.png" alt="Easy Exchanges" className="w-7 h-7 object-contain" />
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-[#0F172A] border border-slate-800">
+            <div className="p-2 rounded-xl bg-pink-500/10 shrink-0">
+              <img src="/hassle-free.png" alt="Easy Exchanges" className="w-7 h-7 object-contain" />
+            </div>
+            <div>
+              <h4 className="text-white font-bold text-sm">Easy Exchanges</h4>
+              <p className="text-xs text-slate-400">7 Days size & product replacement</p>
+            </div>
           </div>
-          <div>
-            <h4 className="text-white font-bold text-sm">Easy Exchanges</h4>
-            <p className="text-xs text-slate-400">7 Days size & product replacement</p>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#0F172A] border border-slate-800">
-          <div className="p-2 rounded-xl bg-amber-500/10 shrink-0">
-            <img src="/authenticity.png" alt="100% Original" className="w-7 h-7 object-contain" />
-          </div>
-          <div>
-            <h4 className="text-white font-bold text-sm">100% Original</h4>
-            <p className="text-xs text-slate-400">Authentic Tex Wear Crafts</p>
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-[#0F172A] border border-slate-800">
+            <div className="p-2 rounded-xl bg-amber-500/10 shrink-0">
+              <img src="/authenticity.png" alt="100% Original" className="w-7 h-7 object-contain" />
+            </div>
+            <div>
+              <h4 className="text-white font-bold text-sm">100% Original</h4>
+              <p className="text-xs text-slate-400">Authentic Tex Wear Crafts</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Footer Links */}
-      <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+      <div className={`max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 ${isHomePage ? 'py-6 sm:py-8' : 'py-12'}`}>
         {/* Brand Column */}
         <div className="lg:col-span-2 space-y-4">
           <Logo variant="light" />
@@ -141,6 +146,12 @@ export const Footer: React.FC = () => {
             <li>
               <Link href="/contact" className="hover:text-sky-400 transition-colors">
                 Contact Us
+              </Link>
+            </li>
+            <li>
+              <Link href="/feedback" className="hover:text-amber-400 text-amber-400/90 font-bold transition-colors flex items-center gap-1.5">
+                <span>Customer Feedback & Reviews</span>
+
               </Link>
             </li>
           </ul>
