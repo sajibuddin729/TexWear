@@ -25,9 +25,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
   const [selectedImg, setSelectedImg] = useState<string>(product?.images[0] || '');
   const [selectedSize, setSelectedSize] = useState<string>(product?.sizes[0] || 'M');
-  const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string }>(
-    product?.colors[0] || { name: 'Default', hex: '#000000' }
-  );
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'shipping'>('desc');
 
@@ -50,7 +47,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
     .slice(0, 4);
 
   const handleAddToCart = () => {
-    addToCart(product, selectedSize, selectedColor, quantity);
+    const defaultColor = product.colors?.[0] || { name: 'Standard', hex: '#000000' };
+    addToCart(product, selectedSize, defaultColor, quantity);
   };
 
   const handleQuickBuy = () => {
@@ -78,14 +76,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           {/* Left Gallery (5 cols) */}
           <div className="lg:col-span-6 space-y-4">
             {/* Main Display Image */}
-            <div className="relative aspect-[4/5] w-full bg-slate-100 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner" style={{ aspectRatio: '4/5' }}>
+            <div className="relative w-full aspect-square sm:aspect-[4/3] md:aspect-square bg-slate-50 dark:bg-slate-800/40 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700/80 p-3 sm:p-5 flex items-center justify-center shadow-inner group">
               <img
                 src={mainImage}
                 alt={product.title}
-                className="w-full h-full object-cover object-top"
+                className="w-full h-full max-h-[500px] object-contain transition-transform duration-500 group-hover:scale-105"
               />
               {product.discountPercentage && (
-                <span className="absolute top-4 left-4 bg-red-600 text-white font-black text-xs uppercase tracking-wider px-3 py-1 rounded-md shadow-md">
+                <span className="absolute top-4 left-4 bg-red-600 text-white font-black text-xs uppercase tracking-wider px-3 py-1 rounded-md shadow-md z-10">
                   -{product.discountPercentage}% OFF
                 </span>
               )}
@@ -98,13 +96,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                   <button
                     key={idx}
                     onClick={() => setSelectedImg(imgUrl)}
-                    className={`w-20 h-24 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
+                    className={`w-20 h-20 rounded-2xl overflow-hidden border-2 p-1 bg-white dark:bg-slate-800 transition-all shrink-0 flex items-center justify-center cursor-pointer ${
                       mainImage === imgUrl
                         ? 'border-sky-600 ring-2 ring-sky-500/30'
                         : 'border-slate-200 dark:border-slate-700 opacity-70 hover:opacity-100'
                     }`}
                   >
-                    <img src={imgUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+                    <img src={imgUrl} alt="Thumbnail" className="w-full h-full object-contain" />
                   </button>
                 ))}
               </div>
@@ -190,33 +188,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 </div>
               )}
 
-              {/* Color Selector */}
-              {product.colors.length > 0 && (
-                <div className="space-y-2">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
-                    Select Color: <span className="text-sky-600 font-normal">{selectedColor.name}</span>
-                  </span>
-                  <div className="flex items-center gap-3">
-                    {product.colors.map((clr) => (
-                      <button
-                        key={clr.name}
-                        onClick={() => setSelectedColor(clr)}
-                        className={`group relative p-1 rounded-full border-2 transition-all ${
-                          selectedColor.name === clr.name
-                            ? 'border-sky-600 ring-2 ring-sky-500/30'
-                            : 'border-transparent'
-                        }`}
-                        title={clr.name}
-                      >
-                        <span
-                          className="block w-7 h-7 rounded-full border border-slate-300 shadow-xs"
-                          style={{ backgroundColor: clr.hex }}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Quantity */}
               <div className="space-y-2">
