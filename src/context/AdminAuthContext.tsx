@@ -4,14 +4,13 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface AdminAuthContextType {
   isAuthenticated: boolean;
-  login: (password: string) => boolean;
+  login: (password: string) => Promise<boolean>;
   logout: () => void;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
 const ADMIN_STORAGE_KEY = 'texwear_admin_session_v1';
-const DEFAULT_ADMIN_PASSCODE = 'admin123'; // Default secret passcode for Admin
 
 export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -29,13 +28,24 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setIsLoaded(true);
   }, []);
 
-  const login = (password: string): boolean => {
-    if (password === DEFAULT_ADMIN_PASSCODE || password === 'texwear2026') {
-      setIsAuthenticated(true);
-      localStorage.setItem(ADMIN_STORAGE_KEY, 'true');
-      return true;
+  const login = async (password: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode: password }),
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        setIsAuthenticated(true);
+        localStorage.setItem(ADMIN_STORAGE_KEY, 'true');
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error('Login verification failed:', e);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {

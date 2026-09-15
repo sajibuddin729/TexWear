@@ -11,14 +11,23 @@ import toast from 'react-hot-toast';
 function AdminProtectedContent({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, login } = useAdminAuth();
   const [passcode, setPasscode] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(passcode);
-    if (success) {
-      toast.success('Admin Passcode Authorized! Welcome.');
-    } else {
-      toast.error('Invalid Admin Passcode! Access Denied.');
+    if (loading) return;
+    setLoading(true);
+    try {
+      const success = await login(passcode);
+      if (success) {
+        toast.success('Admin Passcode Authorized! Welcome.');
+      } else {
+        toast.error('Invalid Admin Passcode! Access Denied.');
+      }
+    } catch {
+      toast.error('Authentication request failed.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,7 +57,7 @@ function AdminProtectedContent({ children }: { children: React.ReactNode }) {
               <input
                 type="password"
                 required
-                placeholder="Enter passcode (default: admin123)"
+                placeholder="Enter Admin Passcode"
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value)}
                 className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-sky-500 transition-colors"
@@ -57,9 +66,10 @@ function AdminProtectedContent({ children }: { children: React.ReactNode }) {
 
             <button
               type="submit"
-              className="w-full py-3.5 bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center justify-center gap-2 transition-transform hover:scale-102"
+              disabled={loading}
+              className="w-full py-3.5 bg-sky-600 hover:bg-sky-500 disabled:bg-slate-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center justify-center gap-2 transition-transform hover:scale-102 disabled:cursor-not-allowed"
             >
-              <span>Authenticate & Enter</span>
+              <span>{loading ? 'Verifying Passcode...' : 'Authenticate & Enter'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
