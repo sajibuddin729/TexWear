@@ -6,7 +6,7 @@ import { ProductCard } from './ProductCard';
 import { Zap, Clock } from 'lucide-react';
 
 export const FlashSale: React.FC = () => {
-  const { products } = useShop();
+  const { products, productsLoaded } = useShop();
 
   const flashSaleProducts = products.filter((p) => p.isFlashSale);
 
@@ -33,7 +33,7 @@ export const FlashSale: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  if (flashSaleProducts.length === 0) return null;
+  if (productsLoaded && flashSaleProducts.length === 0) return null;
 
   return (
     <section className="py-8 sm:py-12 bg-gradient-to-r from-amber-500/10 via-amber-50 to-amber-500/10 text-slate-900 relative overflow-hidden border-y border-amber-300/60 shadow-xs">
@@ -76,9 +76,20 @@ export const FlashSale: React.FC = () => {
 
         {/* Product Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-          {flashSaleProducts.slice(0, 4).map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {!productsLoaded ? (
+            [...Array(4)].map((_, i) => (
+              <div key={`flash-skel-${i}`} className="bg-white/80 rounded-2xl p-4 border border-amber-200/60 animate-pulse space-y-3">
+                <div className="w-full aspect-[4/5] bg-amber-100/50 rounded-xl" />
+                <div className="h-3 bg-amber-100/60 rounded w-1/3" />
+                <div className="h-4 bg-amber-200/50 rounded w-3/4" />
+                <div className="h-5 bg-amber-200/60 rounded w-1/2" />
+              </div>
+            ))
+          ) : (
+            flashSaleProducts.slice(0, 4).map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))
+          )}
         </div>
       </div>
     </section>

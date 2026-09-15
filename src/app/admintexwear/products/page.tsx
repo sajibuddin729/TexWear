@@ -3,15 +3,17 @@
 import React, { useState } from 'react';
 import { useShop } from '@/context/ShopContext';
 import { Product } from '@/types';
-import { Plus, Search, Trash2, Edit, X, Package, Upload, Image as ImageIcon, Check } from 'lucide-react';
+import { Plus, Search, Trash2, Edit, X, Package, Upload, Image as ImageIcon, Check, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminProductsPage() {
-  const { products, categories, addProduct, updateProduct, deleteProduct } = useShop();
+  const { products, productsLoaded, categories, addProduct, updateProduct, deleteProduct, toggleFlashSale } = useShop();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'flash' | 'new'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Form State
   const [title, setTitle] = useState('');
@@ -27,11 +29,17 @@ export default function AdminProductsPage() {
   const [isFlashSale, setIsFlashSale] = useState(false);
   const [isNewArrival, setIsNewArrival] = useState(true);
 
-  const filteredProducts = products.filter((p) =>
-    p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.categoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.sku.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch =
+      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.categoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.sku.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (!matchesSearch) return false;
+    if (activeFilter === 'flash') return p.isFlashSale;
+    if (activeFilter === 'new') return p.isNewArrival;
+    return true;
+  });
 
   const openAddModal = () => {
     setEditingProduct(null);
@@ -96,7 +104,7 @@ export default function AdminProductsPage() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!title.trim() || !categoryId) {
@@ -104,50 +112,62 @@ export default function AdminProductsPage() {
       return;
     }
 
-    const selectedCategory = categories.find((c) => c.id === categoryId);
-    const categoryName = selectedCategory ? selectedCategory.name : 'General';
-    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-    const discountPercentage = Math.round(((originalPrice - price) / originalPrice) * 100);
+    setIsSaving(true);
 
-    const finalImages = images.length > 0 ? images : ['https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80'];
+    try {
+      const selectedCategory = categories.find((c) => c.id === categoryId);
+      const categoryName = selectedCategory ? selectedCategory.name : 'General';
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      const discountPercentage = Math.round(((originalPrice - price) / originalPrice) * 100);
 
-    const productPayload = {
-      title,
-      slug,
-      sku,
-      price: Number(price),
-      originalPrice: Number(originalPrice),
-      discountPercentage: discountPercentage > 0 ? discountPercentage : 0,
-      categoryId,
-      categoryName,
-      images: finalImages,
-      sizes,
-      colors: [
-        { name: 'Navy', hex: '#0f172a' },
-        { name: 'Black', hex: '#000000' },
-      ],
-      description,
-      details: ['Fabric: Premium Cotton Blend', 'Fit: Modern Comfort Fit', 'Care: Machine Wash Cold'],
-      inStock: stockCount > 0,
-      stockCount: Number(stockCount),
-      isNewArrival,
-      isFlashSale,
-      isBestSeller: true,
-      rating: 4.9,
-      reviewCount: 12,
-    };
+      const finalImages = images.length > 0 ? images : ['https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80'];
 
-    if (editingProduct) {
-      updateProduct({
-        ...productPayload,
-        id: editingProduct.id,
-        createdAt: editingProduct.createdAt,
-      });
-    } else {
-      addProduct(productPayload);
+      const productPayload = {
+        title,
+        slug,
+        sku,
+        price: Number(price),
+        originalPrice: Number(originalPrice),
+        discountPercentage: discountPercentage > 0 ? discountPercentage : 0,
+        categoryId,
+        categoryName,
+        images: finalImages,
+        sizes,
+        colors: editingProduct?.colors && editingProduct.colors.length > 0 ? editingProduct.colors : [
+          { name: 'Navy', hex: '#0f172a' },
+          { name: 'Black', hex: '#000000' },
+        ],
+        description,
+        details: editingProduct?.details && editingProduct.details.length > 0 ? editingProduct.details : ['Fabric: Premium Cotton Blend', 'Fit: Modern Comfort Fit', 'Care: Machine Wash Cold'],
+        inStock: stockCount > 0,
+        stockCount: Number(stockCount),
+        isNewArrival,
+        isFlashSale,
+        isBestSeller: true,
+        rating: editingProduct?.rating || 4.9,
+        reviewCount: editingProduct?.reviewCount || 12,
+      };
+
+      let success = false;
+      if (editingProduct) {
+        success = await updateProduct({
+          ...productPayload,
+          id: editingProduct.id,
+          createdAt: editingProduct.createdAt,
+        });
+      } else {
+        success = await addProduct(productPayload);
+      }
+
+      if (success) {
+        setIsModalOpen(false);
+      }
+    } catch (err) {
+      console.error('Submit error:', err);
+      toast.error('Failed to save product');
+    } finally {
+      setIsSaving(false);
     }
-
-    setIsModalOpen(false);
   };
 
   return (
@@ -173,16 +193,53 @@ export default function AdminProductsPage() {
         </button>
       </div>
 
-      {/* Search Bar */}
-      <div className="flex items-center gap-3 bg-slate-950 p-3 rounded-2xl border border-slate-800">
-        <Search className="w-4 h-4 text-slate-400 ml-2" />
-        <input
-          type="text"
-          placeholder="Search by Title, SKU or Category..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="flex-1 bg-transparent text-xs font-semibold text-white placeholder-slate-500 focus:outline-none"
-        />
+      {/* Filter Tabs & Search Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+          <button
+            onClick={() => setActiveFilter('all')}
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+              activeFilter === 'all'
+                ? 'bg-sky-600 text-white shadow-md'
+                : 'bg-slate-950 hover:bg-slate-900 text-slate-400 border border-slate-800'
+            }`}
+          >
+            All Products ({products.length})
+          </button>
+          <button
+            onClick={() => setActiveFilter('flash')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+              activeFilter === 'flash'
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/20'
+                : 'bg-slate-950 hover:bg-slate-900 text-amber-400 border border-slate-800'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5 fill-current" />
+            <span>Flash Sale Only ({products.filter((p) => p.isFlashSale).length})</span>
+          </button>
+          <button
+            onClick={() => setActiveFilter('new')}
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+              activeFilter === 'new'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'bg-slate-950 hover:bg-slate-900 text-emerald-400 border border-slate-800'
+            }`}
+          >
+            New Arrivals ({products.filter((p) => p.isNewArrival).length})
+          </button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="flex items-center gap-3 bg-slate-950 p-2.5 rounded-2xl border border-slate-800 flex-1 max-w-md">
+          <Search className="w-4 h-4 text-slate-400 ml-2" />
+          <input
+            type="text"
+            placeholder="Search by Title, SKU or Category..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 bg-transparent text-xs font-semibold text-white placeholder-slate-500 focus:outline-none"
+          />
+        </div>
       </div>
 
       {/* Product Table */}
@@ -196,7 +253,7 @@ export default function AdminProductsPage() {
                 <th className="p-4">SKU</th>
                 <th className="p-4">Price</th>
                 <th className="p-4">Stock</th>
-                <th className="p-4">Tags</th>
+                <th className="p-4">Flash Sale & Status</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -233,14 +290,23 @@ export default function AdminProductsPage() {
                     </span>
                   </td>
                   <td className="p-4">
-                    <div className="flex flex-wrap gap-1">
-                      {product.isFlashSale && (
-                        <span className="bg-amber-500/20 text-amber-400 font-bold text-[9px] uppercase px-2 py-0.5 rounded">
-                          FLASH
-                        </span>
-                      )}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => toggleFlashSale(product.id, !product.isFlashSale)}
+                        title={product.isFlashSale ? "Click to remove from Flash Sale" : "Click to add to Flash Sale"}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-xs ${
+                          product.isFlashSale
+                            ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 hover:from-red-500 hover:to-red-600 hover:text-white shadow-amber-500/20'
+                            : 'bg-slate-900 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-slate-800 hover:border-amber-500/40'
+                        }`}
+                      >
+                        <Zap className={`w-3.5 h-3.5 ${product.isFlashSale ? 'fill-slate-950' : 'text-slate-500'}`} />
+                        <span>{product.isFlashSale ? 'FLASH (ON)' : '+ ADD FLASH'}</span>
+                      </button>
+
                       {product.isNewArrival && (
-                        <span className="bg-emerald-500/20 text-emerald-400 font-bold text-[9px] uppercase px-2 py-0.5 rounded">
+                        <span className="bg-emerald-500/20 text-emerald-400 font-bold text-[9px] uppercase px-2 py-0.5 rounded border border-emerald-500/30">
                           NEW
                         </span>
                       )}
@@ -466,9 +532,11 @@ export default function AdminProductsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-sky-600 text-white rounded-xl font-extrabold uppercase shadow-lg"
+                  disabled={isSaving}
+                  className="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white rounded-xl font-extrabold uppercase shadow-lg flex items-center gap-2 cursor-pointer transition-all"
                 >
-                  Save Product
+                  {isSaving && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                  <span>{isSaving ? 'Saving...' : 'Save Product'}</span>
                 </button>
               </div>
             </form>

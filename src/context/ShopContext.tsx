@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 
 interface ShopContextType {
   products: Product[];
+  productsLoaded: boolean;
   categories: Category[];
   categoriesLoaded: boolean;
   banners: Banner[];
@@ -39,9 +40,10 @@ interface ShopContextType {
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
 
   // Admin Mutations
-  addProduct: (product: Omit<Product, 'id' | 'createdAt'>) => void;
-  updateProduct: (product: Product) => void;
+  addProduct: (product: Omit<Product, 'id' | 'createdAt'>) => Promise<boolean>;
+  updateProduct: (product: Product) => Promise<boolean>;
   deleteProduct: (id: string) => void;
+  toggleFlashSale: (productId: string, isFlashSale: boolean) => Promise<boolean>;
   addCategory: (category: Omit<Category, 'id'>) => void;
   updateCategory: (category: Category) => void;
   deleteCategory: (id: string) => void;
@@ -72,8 +74,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [quickOrderProduct, setQuickOrderProduct] = useState<Product | null>(null);
-  // Track whether the API categories have been loaded (to suppress flash)
+  // Track whether the API categories and products have been loaded (to suppress flash)
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+  const [productsLoaded, setProductsLoaded] = useState(false);
 
   // Load data from API / LocalStorage on mount
   useEffect(() => {
@@ -97,6 +100,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (prodRes.status === 'fulfilled' && prodRes.value?.success && Array.isArray(prodRes.value.data) && prodRes.value.data.length > 0) {
           setProducts(prodRes.value.data);
         }
+        // Mark products as loaded (API responded — suppresses flash)
+        setProductsLoaded(true);
 
         if (orderRes.status === 'fulfilled' && orderRes.value?.success && Array.isArray(orderRes.value.data) && orderRes.value.data.length > 0) {
           const mappedOrders: Order[] = orderRes.value.data.map((o: any) => ({
@@ -359,8 +364,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Admin Mutations
-  const addProduct = async (newProd: Omit<Product, 'id' | 'createdAt'>) => {
-    // Process base64 images
+  const addProduct = async (newProd: Omit<Product, 'id' | 'createdAt'>): Promise<boolean> => {
+    // Process base64 images safely
     const uploadedImages = await Promise.all(
       newProd.images.map((img) => uploadImageIfNeeded(img))
     );
@@ -380,23 +385,25 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.success && data.data) {
         setProducts((prev) => [data.data, ...prev]);
         toast.success('Product Added & Saved to Database!');
-        return;
+        return true;
+      } else {
+        throw new Error(data.error || 'Failed to create product in database');
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to add product to API:', e);
+      // Fallback local
+      const created: Product = {
+        ...prodData,
+        id: `prod-${Date.now()}`,
+        createdAt: new Date().toISOString(),
+      };
+      setProducts((prev) => [created, ...prev]);
+      toast.success('Product Added Locally!');
+      return true;
     }
-
-    // Fallback local
-    const created: Product = {
-      ...prodData,
-      id: `prod-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    setProducts((prev) => [created, ...prev]);
-    toast.success('Product Added Successfully!');
   };
 
-  const updateProduct = async (updated: Product) => {
+  const updateProduct = async (updated: Product): Promise<boolean> => {
     const uploadedImages = await Promise.all(
       updated.images.map((img) => uploadImageIfNeeded(img))
     );
@@ -406,15 +413,60 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       images: uploadedImages,
     };
 
+    // Optimistic local update
     setProducts((prev) => prev.map((p) => (p.id === updated.id ? prodData : p)));
 
-    fetch(`/api/products/${updated.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(prodData),
-    }).catch((err) => console.error('Failed to update product in API:', err));
+    try {
+      const res = await fetch(`/api/products/${updated.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(prodData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.data) {
+          setProducts((prev) => prev.map((p) => (p.id === updated.id ? data.data : p)));
+        }
+        toast.success('Product Details Updated & Saved to Database!');
+        return true;
+      } else {
+        throw new Error(data.error || 'Failed to update product in database');
+      }
+    } catch (err) {
+      console.error('Failed to update product in API:', err);
+      toast.error('Failed to save update to database');
+      return false;
+    }
+  };
 
-    toast.success('Product Details Updated!');
+  const toggleFlashSale = async (productId: string, isFlashSale: boolean): Promise<boolean> => {
+    // Optimistic UI update
+    setProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, isFlashSale } : p))
+    );
+
+    try {
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isFlashSale }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(isFlashSale ? '⚡ Added to Flash Sale Offers!' : 'Removed from Flash Sale');
+        return true;
+      } else {
+        throw new Error(data.error || 'Failed to update Flash Sale');
+      }
+    } catch (err) {
+      console.error('Failed to toggle Flash Sale:', err);
+      // Rollback optimistic update
+      setProducts((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, isFlashSale: !isFlashSale } : p))
+      );
+      toast.error('Failed to update Flash Sale in database');
+      return false;
+    }
   };
 
   const deleteProduct = (id: string) => {
@@ -571,6 +623,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <ShopContext.Provider
       value={{
         products,
+        productsLoaded,
         categories,
         categoriesLoaded,
         banners,
@@ -598,6 +651,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addProduct,
         updateProduct,
         deleteProduct,
+        toggleFlashSale,
         addCategory,
         updateCategory,
         deleteCategory,
