@@ -13,11 +13,11 @@ export const Logo: React.FC<LogoProps> = ({
   return (
     <Link href="/" className={`inline-flex items-center group shrink-0 transition-transform duration-300 hover:scale-105 ${className}`}>
       <img
-        src="/update_logo.png"
+        src="/logo1.png"
         alt="TEX WEAR Life Style"
         className="h-10 sm:h-12 md:h-14 w-auto object-contain"
         onError={(e) => {
-          (e.target as HTMLImageElement).src = '/update_logo.png';
+          (e.target as HTMLImageElement).src = '/logo1.png';
         }}
       />
     </Link>
