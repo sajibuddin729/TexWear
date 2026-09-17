@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   title: "TEX WEAR — Life Style | Premium Fashion & Lifestyle Bangladesh",
   description: "Buy premium Panjabi, ethnic wear, casual & formal shirts, ladies kameez, saree, and accessories online at TEX WEAR Life Style.",
   icons: {
-    icon: "/final_logo3.png",
-    shortcut: "/final_logo3.png",
-    apple: "/final_logo3.png",
+    icon: "/final_logo6.png",
+    shortcut: "/final_logo6.png",
+    apple: "/final_logo6.png",
   },
 };
 

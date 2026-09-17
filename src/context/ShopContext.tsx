@@ -120,7 +120,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 id: i.productId,
                 title: i.title,
                 price: i.price,
-                images: [i.image || '/final_logo3.png'],
+                images: [i.image || '/final_logo6.png'],
               } as Product,
               selectedSize: i.size || 'Standard',
               selectedColor: { name: i.colorName || 'Default', hex: '#000' },
