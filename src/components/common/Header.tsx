@@ -111,7 +111,7 @@ export const Header: React.FC = () => {
         </button>
 
         {/* Logo */}
-        <div className="shrink-0 max-w-[140px] sm:max-w-none">
+        <div className="flex items-center min-w-0 max-w-[205px] min-[390px]:max-w-[225px] sm:max-w-none">
           <Logo variant="light" />
         </div>
 
