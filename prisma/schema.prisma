@@ -115,6 +115,7 @@ model SiteSettings {
   marqueeAnnouncement String   @default("Welcome to TEX WEAR Life Style — Premium Fashion & Lifestyle | Home Delivery Nationwide!")
   facebookUrl         String?  @default("https://facebook.com")
   instagramUrl        String?  @default("https://instagram.com")
+  youtubeUrl          String?  @default("https://youtube.com")
   updatedAt           DateTime @updatedAt
 }
 

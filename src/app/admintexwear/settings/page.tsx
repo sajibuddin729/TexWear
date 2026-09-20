@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useShop } from '@/context/ShopContext';
 import { StoreLocationData } from '@/data/initialData';
-import { Settings, MapPin, PhoneCall, Mail, Building, Megaphone, Plus, Edit2, Trash2, CheckCircle2, Globe } from 'lucide-react';
+import { Settings, MapPin, PhoneCall, Mail, Building, Megaphone, Plus, Edit2, Trash2, CheckCircle2, Globe, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminSettingsPage() {
@@ -18,6 +18,7 @@ export default function AdminSettingsPage() {
     marqueeAnnouncement: siteSettings.marqueeAnnouncement || '',
     facebookUrl: siteSettings.facebookUrl || '',
     instagramUrl: siteSettings.instagramUrl || '',
+    youtubeUrl: siteSettings.youtubeUrl || '',
   });
 
   const [savingSettings, setSavingSettings] = useState(false);
@@ -43,6 +44,7 @@ export default function AdminSettingsPage() {
       marqueeAnnouncement: siteSettings.marqueeAnnouncement || '',
       facebookUrl: siteSettings.facebookUrl || '',
       instagramUrl: siteSettings.instagramUrl || '',
+      youtubeUrl: siteSettings.youtubeUrl || '',
     });
   }, [siteSettings]);
 
@@ -215,6 +217,79 @@ export default function AdminSettingsPage() {
           <p className="text-[11px] text-slate-500">
             This text scrolls dynamically across the very top bar of the website Header.
           </p>
+        </div>
+
+        {/* Social Media Links Section */}
+        <div className="pt-6 border-t border-slate-800/80 space-y-4">
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+              <Share2 className="w-4 h-4 text-amber-400" />
+              <span>Footer Social Media Links (ফেসবুক ও ইউটিউব লিংক)</span>
+            </h3>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Set your official Facebook page and YouTube channel links. These are directly linked to the social buttons in your website footer.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Facebook Page URL */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-[#1877F2] fill-current" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                  </svg>
+                  <span>Facebook Page Link</span>
+                </span>
+                {formData.facebookUrl && (
+                  <a
+                    href={formData.facebookUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] text-sky-400 hover:underline lowercase font-normal"
+                  >
+                    Test Link ↗
+                  </a>
+                )}
+              </label>
+              <input
+                type="url"
+                value={formData.facebookUrl}
+                onChange={(e) => setFormData({ ...formData, facebookUrl: e.target.value })}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-blue-500"
+                placeholder="https://facebook.com/texwearbd"
+              />
+            </div>
+
+            {/* YouTube Channel URL */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-[#FF0000] fill-current" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                  </svg>
+                  <span>YouTube Channel Link</span>
+                </span>
+                {formData.youtubeUrl && (
+                  <a
+                    href={formData.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] text-red-400 hover:underline lowercase font-normal"
+                  >
+                    Test Link ↗
+                  </a>
+                )}
+              </label>
+              <input
+                type="url"
+                value={formData.youtubeUrl}
+                onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-red-500"
+                placeholder="https://youtube.com/@texwearlifestyle"
+              />
+            </div>
+          </div>
         </div>
       </form>
 

@@ -137,6 +137,7 @@ export interface SiteSettingsData {
   marqueeAnnouncement: string;
   facebookUrl?: string;
   instagramUrl?: string;
+  youtubeUrl?: string;
 }
 
 export interface StoreLocationData {
@@ -151,12 +152,13 @@ export interface StoreLocationData {
 
 export const INITIAL_SETTINGS: SiteSettingsData = {
   storeName: 'TEX WEAR Life Style',
-  phone: '+8801623446677',
-  email: 'support@texwear.com',
-  address: 'House 42, Road 11, Block D, Banani, Dhaka-1213',
+  phone: '+8801825400045',
+  email: 'texwearstyle.com@gmail.com',
+  address: '567, 1st Floor, East Kazipara, Begum Rokeya Sarani, Mirpur, Metro Rail Pillar No. 285, Dhaka-1216',
   marqueeAnnouncement: 'Welcome to TEX WEAR Life Style — Premium Fashion & Lifestyle | Home Delivery Nationwide!',
   facebookUrl: 'https://facebook.com/texwearbd',
   instagramUrl: 'https://instagram.com/texwearbd',
+  youtubeUrl: 'https://youtube.com/@texwearlifestyle',
 };
 
 export const INITIAL_STORES: StoreLocationData[] = [

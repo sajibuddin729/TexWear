@@ -27,7 +27,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { storeName, phone, email, address, marqueeAnnouncement, facebookUrl, instagramUrl } = body;
+    const { storeName, phone, email, address, marqueeAnnouncement, facebookUrl, instagramUrl, youtubeUrl } = body;
 
     const settings = await prisma.siteSettings.upsert({
       where: { id: 'default' },
@@ -39,6 +39,7 @@ export async function POST(request: Request) {
         marqueeAnnouncement,
         facebookUrl,
         instagramUrl,
+        youtubeUrl,
       },
       create: {
         id: 'default',
@@ -49,6 +50,7 @@ export async function POST(request: Request) {
         marqueeAnnouncement,
         facebookUrl,
         instagramUrl,
+        youtubeUrl,
       },
     });
 
