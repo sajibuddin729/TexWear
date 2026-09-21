@@ -44,9 +44,9 @@ interface ShopContextType {
   updateProduct: (product: Product) => Promise<boolean>;
   deleteProduct: (id: string) => void;
   toggleFlashSale: (productId: string, isFlashSale: boolean) => Promise<boolean>;
-  addCategory: (category: Omit<Category, 'id'>) => void;
-  updateCategory: (category: Category) => void;
-  deleteCategory: (id: string) => void;
+  addCategory: (category: Omit<Category, 'id'>) => Promise<boolean>;
+  updateCategory: (category: Category) => Promise<boolean>;
+  deleteCategory: (id: string) => Promise<boolean>;
   updateSiteSettings: (settings: Partial<SiteSettingsData>) => Promise<void>;
   addStoreLocation: (store: Omit<StoreLocationData, 'id'>) => Promise<void>;
   updateStoreLocation: (store: StoreLocationData) => Promise<void>;
@@ -479,15 +479,16 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.success('Product Removed');
   };
 
-  const addCategory = async (cat: Omit<Category, 'id'>) => {
+  const addCategory = async (cat: Omit<Category, 'id'>): Promise<boolean> => {
     let catImage = cat.image || '';
-    if (catImage) {
+    if (catImage && catImage.startsWith('data:image/')) {
       catImage = await uploadImageIfNeeded(catImage);
     }
 
     const catData = {
       ...cat,
-      image: catImage,
+      parentId: cat.parentId || null,
+      image: catImage || null,
     };
 
     try {
@@ -499,51 +500,72 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await res.json();
       if (data.success && data.data) {
         setCategories((prev) => [...prev, data.data]);
-        toast.success('Category Created in Database!');
-        return;
+        toast.success('Category Created Successfully!');
+        return true;
+      } else {
+        toast.error(data.error || 'Failed to create category');
+        return false;
       }
     } catch (e) {
       console.error('Failed to add category to API:', e);
+      toast.error('Error creating category in server');
+      return false;
     }
-
-    const created: Category = {
-      ...catData,
-      id: `cat-${Date.now()}`,
-    };
-    setCategories((prev) => [...prev, created]);
-    toast.success('Category Created!');
   };
 
-  const updateCategory = async (updated: Category) => {
+  const updateCategory = async (updated: Category): Promise<boolean> => {
     let catImage = updated.image || '';
-    if (catImage) {
+    if (catImage && catImage.startsWith('data:image/')) {
       catImage = await uploadImageIfNeeded(catImage);
     }
 
     const catData = {
       ...updated,
-      image: catImage,
+      parentId: updated.parentId || null,
+      image: catImage || null,
     };
 
-    setCategories((prev) => prev.map((c) => (c.id === updated.id ? catData : c)));
-
-    fetch(`/api/categories/${updated.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(catData),
-    }).catch((err) => console.error('Failed to update category in API:', err));
-
-    toast.success('Category Updated');
+    try {
+      const res = await fetch(`/api/categories/${updated.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(catData),
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setCategories((prev) => prev.map((c) => (c.id === updated.id ? data.data : c)));
+        toast.success('Category Updated Successfully!');
+        return true;
+      } else {
+        toast.error(data.error || 'Failed to update category');
+        return false;
+      }
+    } catch (err) {
+      console.error('Failed to update category in API:', err);
+      toast.error('Error updating category in server');
+      return false;
+    }
   };
 
-  const deleteCategory = (id: string) => {
-    setCategories((prev) => prev.filter((c) => c.id !== id));
-
-    fetch(`/api/categories/${id}`, {
-      method: 'DELETE',
-    }).catch((err) => console.error('Failed to delete category in API:', err));
-
-    toast.success('Category Deleted');
+  const deleteCategory = async (id: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/categories/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCategories((prev) => prev.filter((c) => c.id !== id));
+        toast.success('Category Deleted Successfully');
+        return true;
+      } else {
+        toast.error(data.error || 'Failed to delete category');
+        return false;
+      }
+    } catch (err) {
+      console.error('Failed to delete category in API:', err);
+      toast.error('Error deleting category in server');
+      return false;
+    }
   };
 
   const updateSiteSettings = async (newSettings: Partial<SiteSettingsData>) => {
