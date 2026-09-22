@@ -61,10 +61,11 @@ export const CategoryGrid: React.FC = () => {
                     <img
                       src={cat.image || DEFAULT_CATEGORY_IMAGE}
                       alt={cat.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = DEFAULT_CATEGORY_IMAGE;
                       }}
-                      className="w-full h-full object-cover rounded-full group-hover:scale-105 transition-transform duration-700 ease-out"
+                      className="w-full h-full object-cover object-center rounded-full group-hover:scale-105 transition-transform duration-700 ease-out block"
                     />
                   </div>
                   {/* Label */}

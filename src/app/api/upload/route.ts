@@ -38,14 +38,11 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, url: publicUrl });
       } catch (fsErr: any) {
         console.warn('Filesystem write not allowed (Serverless/Vercel):', fsErr.message);
-        // In serverless environments where writing to disk is restricted, avoid 500 errors
-        if (buffer.length < 600 * 1024) {
-          return NextResponse.json({ success: true, url: image });
-        }
+        // On serverless read-only platforms like Vercel, store the data URL directly in database
         return NextResponse.json({
           success: true,
-          url: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80',
-          note: 'Serverless read-only environment: image URL preserved'
+          url: image,
+          note: 'Serverless storage: stored as direct image data'
         });
       }
     }
@@ -73,9 +70,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, url: publicUrl });
     } catch (fsErr: any) {
       console.warn('Filesystem write not allowed (Serverless/Vercel):', fsErr.message);
+      const mime = file.type || 'image/jpeg';
+      const dataUrl = `data:${mime};base64,${buffer.toString('base64')}`;
       return NextResponse.json({
         success: true,
-        url: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80',
+        url: dataUrl,
       });
     }
   } catch (error) {

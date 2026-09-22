@@ -34,10 +34,11 @@ html, body {
   padding: 0;
 }
 
-/* Prevent image clipping and force responsive sizing */
-img {
-  max-width: 100%;
-  height: auto;
+/* Prevent image clipping and force responsive sizing within base layer */
+@layer base {
+  img {
+    max-width: 100%;
+  }
 }
 
 /* TEX WEAR Custom E-Commerce Animations */
