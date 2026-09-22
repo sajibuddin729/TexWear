@@ -384,16 +384,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(data.error || 'Failed to create product in database');
       }
     } catch (e: any) {
-      console.error('Failed to add product to API:', e);
-      // Fallback local
-      const created: Product = {
-        ...prodData,
-        id: `prod-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-      };
-      setProducts((prev) => [created, ...prev]);
-      toast.success('Product Added Locally!');
-      return true;
+      console.error('Failed to add product to database:', e);
+      toast.error(e?.message || 'Failed to save product in database');
+      return false;
     }
   };
 

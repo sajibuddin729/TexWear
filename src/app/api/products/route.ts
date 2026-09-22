@@ -77,18 +77,47 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Title, SKU, Price, and Category are required' }, { status: 400 });
     }
 
+    // Ensure slug is unique to avoid constraint violation crashes
+    const baseSlug = (slug || title).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    let finalSlug = baseSlug;
+    const existingSlug = await prisma.product.findUnique({ where: { slug: finalSlug } });
+    if (existingSlug) {
+      finalSlug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
+    }
+
+    // Ensure SKU is unique
+    let finalSku = sku.trim();
+    const existingSku = await prisma.product.findUnique({ where: { sku: finalSku } });
+    if (existingSku) {
+      finalSku = `${finalSku}-${Math.floor(100 + Math.random() * 900)}`;
+    }
+
+    // Ensure category exists to satisfy foreign key constraint
+    let cat = await prisma.category.findUnique({ where: { id: categoryId } });
+    if (!cat) {
+      cat = await prisma.category.findFirst();
+      if (!cat) {
+        cat = await prisma.category.create({
+          data: {
+            name: categoryName || 'General',
+            slug: 'general',
+          },
+        });
+      }
+    }
+
     const calculatedDiscount = discountPercentage || (originalPrice && originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0);
 
     const product = await prisma.product.create({
       data: {
-        title,
-        slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
-        sku,
+        title: title.trim(),
+        slug: finalSlug,
+        sku: finalSku,
         price: Number(price),
         originalPrice: originalPrice ? Number(originalPrice) : Number(price),
         discountPercentage: calculatedDiscount,
-        categoryId,
-        categoryName: categoryName || 'Category',
+        categoryId: cat.id,
+        categoryName: cat.name,
         images: JSON.stringify(images || []),
         sizes: JSON.stringify(sizes || ['M', 'L', 'XL']),
         colors: JSON.stringify(colors || []),
@@ -104,8 +133,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ success: true, data: formatProduct(product) });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating product:', error);
-    return NextResponse.json({ success: false, error: 'Failed to create product' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error?.message || 'Failed to create product' }, { status: 500 });
   }
 }
