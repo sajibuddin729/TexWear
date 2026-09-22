@@ -6,7 +6,7 @@ import { Package, FolderTree, ShoppingBag, DollarSign, ArrowUpRight } from 'luci
 import Link from 'next/link';
 
 export default function AdminDashboardPage() {
-  const { products, categories, orders } = useShop();
+  const { products, categories, orders, productsLoaded, categoriesLoaded } = useShop();
 
   const totalSales = orders.reduce((sum, o) => sum + o.totalAmount, 0);
 
@@ -67,7 +67,9 @@ export default function AdminDashboardPage() {
               <Package className="w-5 h-5" />
             </div>
           </div>
-          <h2 className="text-3xl font-black text-white">{products.length}</h2>
+          <h2 className="text-3xl font-black text-white">
+            {productsLoaded ? products.length : '...'}
+          </h2>
           <p className="text-[11px] text-purple-400 font-semibold">Catalog Items</p>
         </div>
 
@@ -81,7 +83,9 @@ export default function AdminDashboardPage() {
               <FolderTree className="w-5 h-5" />
             </div>
           </div>
-          <h2 className="text-3xl font-black text-white">{categories.length}</h2>
+          <h2 className="text-3xl font-black text-white">
+            {categoriesLoaded ? categories.length : '...'}
+          </h2>
           <p className="text-[11px] text-amber-400 font-semibold">Product Classifications</p>
         </div>
       </div>

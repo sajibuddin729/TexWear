@@ -14,6 +14,7 @@ export default function AdminProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Form State
   const [title, setTitle] = useState('');
@@ -28,6 +29,19 @@ export default function AdminProductsPage() {
   const [stockCount, setStockCount] = useState<number>(30);
   const [isFlashSale, setIsFlashSale] = useState(false);
   const [isNewArrival, setIsNewArrival] = useState(true);
+
+  const handleDeleteProduct = async (product: Product) => {
+    if (!confirm(`Are you sure you want to permanently delete "${product.title}"?\nThis action will immediately and permanently delete this product from the database.`)) {
+      return;
+    }
+
+    setDeletingId(product.id);
+    try {
+      await deleteProduct(product.id);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const filteredProducts = products.filter((p) => {
     const matchesSearch =
@@ -48,7 +62,7 @@ export default function AdminProductsPage() {
     setPrice(1850);
     setOriginalPrice(2200);
     setCategoryId(categories[0]?.id || '');
-    setImages(['https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80']);
+    setImages([]);
     setUrlInput('');
     setSizes(['M', 'L', 'XL', 'XXL']);
     setDescription('Premium TEX WEAR crafted product with modern silhouette and comfortable fabric.');
@@ -65,7 +79,7 @@ export default function AdminProductsPage() {
     setPrice(product.price);
     setOriginalPrice(product.originalPrice || product.price);
     setCategoryId(product.categoryId);
-    setImages(product.images.length > 0 ? product.images : ['https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80']);
+    setImages(product.images && product.images.length > 0 ? product.images : []);
     setUrlInput('');
     setSizes(product.sizes);
     setDescription(product.description);
@@ -112,6 +126,11 @@ export default function AdminProductsPage() {
       return;
     }
 
+    if (images.length === 0) {
+      toast.error('Please upload or provide at least one product image');
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -120,7 +139,7 @@ export default function AdminProductsPage() {
       const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
       const discountPercentage = Math.round(((originalPrice - price) / originalPrice) * 100);
 
-      const finalImages = images.length > 0 ? images : ['https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80'];
+      const finalImages = images;
 
       const productPayload = {
         title,
@@ -204,7 +223,7 @@ export default function AdminProductsPage() {
                 : 'bg-slate-950 hover:bg-slate-900 text-slate-400 border border-slate-800'
             }`}
           >
-            All Products ({products.length})
+            All Products ({productsLoaded ? products.length : '...'})
           </button>
           <button
             onClick={() => setActiveFilter('flash')}
@@ -215,7 +234,7 @@ export default function AdminProductsPage() {
             }`}
           >
             <Zap className="w-3.5 h-3.5 fill-current" />
-            <span>Flash Sale Only ({products.filter((p) => p.isFlashSale).length})</span>
+            <span>Flash Sale Only ({productsLoaded ? products.filter((p) => p.isFlashSale).length : '...'})</span>
           </button>
           <button
             onClick={() => setActiveFilter('new')}
@@ -225,7 +244,7 @@ export default function AdminProductsPage() {
                 : 'bg-slate-950 hover:bg-slate-900 text-emerald-400 border border-slate-800'
             }`}
           >
-            New Arrivals ({products.filter((p) => p.isNewArrival).length})
+            New Arrivals ({productsLoaded ? products.filter((p) => p.isNewArrival).length : '...'})
           </button>
         </div>
 
@@ -258,80 +277,108 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-900">
-              {filteredProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-slate-900/50">
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={product.images[0]}
-                        alt={product.title}
-                        className="w-12 h-14 object-cover rounded-lg bg-slate-800"
-                      />
-                      <div>
-                        <h4 className="font-bold text-white max-w-xs line-clamp-1">{product.title}</h4>
-                        <span className="text-[10px] text-slate-500">
-                          Sizes: {product.sizes.join(', ')}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4 font-bold text-sky-400">{product.categoryName}</td>
-                  <td className="p-4 text-slate-400 font-mono">{product.sku}</td>
-                  <td className="p-4 font-black text-white">৳{product.price.toLocaleString()}</td>
-                  <td className="p-4">
-                    <span
-                      className={`font-extrabold text-[10px] px-2.5 py-1 rounded-full ${
-                        product.inStock
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                      }`}
-                    >
-                      {product.stockCount} units
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => toggleFlashSale(product.id, !product.isFlashSale)}
-                        title={product.isFlashSale ? "Click to remove from Flash Sale" : "Click to add to Flash Sale"}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-xs ${
-                          product.isFlashSale
-                            ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 hover:from-red-500 hover:to-red-600 hover:text-white shadow-amber-500/20'
-                            : 'bg-slate-900 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-slate-800 hover:border-amber-500/40'
-                        }`}
-                      >
-                        <Zap className={`w-3.5 h-3.5 ${product.isFlashSale ? 'fill-slate-950' : 'text-slate-500'}`} />
-                        <span>{product.isFlashSale ? 'FLASH (ON)' : '+ ADD FLASH'}</span>
-                      </button>
-
-                      {product.isNewArrival && (
-                        <span className="bg-emerald-500/20 text-emerald-400 font-bold text-[9px] uppercase px-2 py-0.5 rounded border border-emerald-500/30">
-                          NEW
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => openEditModal(product)}
-                        className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-sky-400 transition-colors"
-                        title="Edit Product"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteProduct(product.id)}
-                        className="p-2 rounded-lg bg-slate-900 hover:bg-red-900/40 text-red-400 transition-colors"
-                        title="Delete Product"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+              {!productsLoaded ? (
+                <tr>
+                  <td colSpan={7} className="p-12 text-center text-slate-400">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <div className="w-7 h-7 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Loading live products from database...
+                      </span>
                     </div>
                   </td>
                 </tr>
-              ))}
+              ) : filteredProducts.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-12 text-center text-slate-500">
+                    <Package className="w-10 h-10 mx-auto mb-2 opacity-30 text-slate-400" />
+                    <p className="text-sm font-bold text-slate-400">No products found</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {searchQuery ? 'Try adjusting your search query' : 'Click "Add New Product" to create one in your database'}
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredProducts.map((product) => (
+                  <tr key={product.id} className="hover:bg-slate-900/50">
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={product.images[0]}
+                          alt={product.title}
+                          className="w-12 h-14 object-cover rounded-lg bg-slate-800"
+                        />
+                        <div>
+                          <h4 className="font-bold text-white max-w-xs line-clamp-1">{product.title}</h4>
+                          <span className="text-[10px] text-slate-500">
+                            Sizes: {product.sizes.join(', ')}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4 font-bold text-sky-400">{product.categoryName}</td>
+                    <td className="p-4 text-slate-400 font-mono">{product.sku}</td>
+                    <td className="p-4 font-black text-white">৳{product.price.toLocaleString()}</td>
+                    <td className="p-4">
+                      <span
+                        className={`font-extrabold text-[10px] px-2.5 py-1 rounded-full ${
+                          product.inStock
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        }`}
+                      >
+                        {product.stockCount} units
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => toggleFlashSale(product.id, !product.isFlashSale)}
+                          title={product.isFlashSale ? "Click to remove from Flash Sale" : "Click to add to Flash Sale"}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-xs ${
+                            product.isFlashSale
+                              ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 hover:from-red-500 hover:to-red-600 hover:text-white shadow-amber-500/20'
+                              : 'bg-slate-900 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-slate-800 hover:border-amber-500/40'
+                          }`}
+                        >
+                          <Zap className={`w-3.5 h-3.5 ${product.isFlashSale ? 'fill-slate-950' : 'text-slate-500'}`} />
+                          <span>{product.isFlashSale ? 'FLASH (ON)' : '+ ADD FLASH'}</span>
+                        </button>
+
+                        {product.isNewArrival && (
+                          <span className="bg-emerald-500/20 text-emerald-400 font-bold text-[9px] uppercase px-2 py-0.5 rounded border border-emerald-500/30">
+                            NEW
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => openEditModal(product)}
+                          className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-sky-400 transition-colors"
+                          title="Edit Product"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(product)}
+                          disabled={deletingId === product.id}
+                          className="p-2 rounded-lg bg-slate-900 hover:bg-red-900/40 text-red-400 transition-colors disabled:opacity-50"
+                          title="Permanently Delete Product"
+                        >
+                          {deletingId === product.id ? (
+                            <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -465,7 +512,7 @@ export default function AdminProductsPage() {
                 </div>
 
                 {/* Previews Grid */}
-                {images.length > 0 && (
+                {images.length > 0 ? (
                   <div className="flex flex-wrap gap-3 pt-2">
                     {images.map((imgSrc, idx) => (
                       <div key={idx} className="relative w-20 h-24 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 group">
@@ -485,6 +532,12 @@ export default function AdminProductsPage() {
                         )}
                       </div>
                     ))}
+                  </div>
+                ) : (
+                  <div className="p-3 text-center border border-dashed border-slate-800 rounded-xl bg-slate-950/50">
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      No images selected yet. Upload an image from your device or paste a URL.
+                    </p>
                   </div>
                 )}
               </div>

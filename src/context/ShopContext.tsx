@@ -42,7 +42,7 @@ interface ShopContextType {
   // Admin Mutations
   addProduct: (product: Omit<Product, 'id' | 'createdAt'>) => Promise<boolean>;
   updateProduct: (product: Product) => Promise<boolean>;
-  deleteProduct: (id: string) => void;
+  deleteProduct: (id: string) => Promise<boolean>;
   toggleFlashSale: (productId: string, isFlashSale: boolean) => Promise<boolean>;
   addCategory: (category: Omit<Category, 'id'>) => Promise<boolean>;
   updateCategory: (category: Category) => Promise<boolean>;
@@ -55,14 +55,13 @@ interface ShopContextType {
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_KEY_PRODUCTS = 'texwear_products_v3';
 const LOCAL_STORAGE_KEY_CATEGORIES = 'texwear_categories_v3';
 const LOCAL_STORAGE_KEY_CART = 'texwear_cart_v2';
 const LOCAL_STORAGE_KEY_WISHLIST = 'texwear_wishlist_v2';
 const LOCAL_STORAGE_KEY_ORDERS = 'texwear_orders_v2';
 
 export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
   const [banners] = useState<Banner[]>(INITIAL_BANNERS);
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
@@ -82,28 +81,28 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     async function loadInitialData() {
       try {
-        // Fetch all APIs in parallel for instant page load speed
+        // Fetch all APIs in parallel with cache: 'no-store' for fresh database data
         const [catRes, prodRes, orderRes, settingsRes, storesRes] = await Promise.allSettled([
-          fetch('/api/categories').then((r) => r.json()),
-          fetch('/api/products').then((r) => r.json()),
-          fetch('/api/orders').then((r) => r.json()),
-          fetch('/api/settings').then((r) => r.json()),
-          fetch('/api/stores').then((r) => r.json()),
+          fetch('/api/categories', { cache: 'no-store' }).then((r) => r.json()),
+          fetch('/api/products', { cache: 'no-store' }).then((r) => r.json()),
+          fetch('/api/orders', { cache: 'no-store' }).then((r) => r.json()),
+          fetch('/api/settings', { cache: 'no-store' }).then((r) => r.json()),
+          fetch('/api/stores', { cache: 'no-store' }).then((r) => r.json()),
         ]);
 
-        if (catRes.status === 'fulfilled' && catRes.value?.success && Array.isArray(catRes.value.data) && catRes.value.data.length > 0) {
+        if (catRes.status === 'fulfilled' && catRes.value?.success && Array.isArray(catRes.value.data)) {
           setCategories(catRes.value.data);
         }
-        // Mark categories as loaded regardless (API responded — even if empty, use INITIAL)
+        // Mark categories as loaded regardless (API responded)
         setCategoriesLoaded(true);
 
-        if (prodRes.status === 'fulfilled' && prodRes.value?.success && Array.isArray(prodRes.value.data) && prodRes.value.data.length > 0) {
+        if (prodRes.status === 'fulfilled' && prodRes.value?.success && Array.isArray(prodRes.value.data)) {
           setProducts(prodRes.value.data);
         }
-        // Mark products as loaded (API responded — suppresses flash)
+        // Mark products as loaded (API responded)
         setProductsLoaded(true);
 
-        if (orderRes.status === 'fulfilled' && orderRes.value?.success && Array.isArray(orderRes.value.data) && orderRes.value.data.length > 0) {
+        if (orderRes.status === 'fulfilled' && orderRes.value?.success && Array.isArray(orderRes.value.data)) {
           const mappedOrders: Order[] = orderRes.value.data.map((o: any) => ({
             id: o.id,
             orderNumber: o.orderId,
@@ -141,7 +140,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setSiteSettings(settingsRes.value.settings);
         }
 
-        if (storesRes.status === 'fulfilled' && storesRes.value?.success && Array.isArray(storesRes.value.stores) && storesRes.value.stores.length > 0) {
+        if (storesRes.status === 'fulfilled' && storesRes.value?.success && Array.isArray(storesRes.value.stores)) {
           setStoreLocations(storesRes.value.stores);
         }
 
@@ -157,11 +156,6 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     loadInitialData();
   }, []);
-
-  // Save changes to LocalStorage as fallback
-  useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY_PRODUCTS, JSON.stringify(products));
-  }, [products]);
 
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY_CATEGORIES, JSON.stringify(categories));
@@ -469,14 +463,25 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const deleteProduct = (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+  const deleteProduct = async (id: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/products/${id}`, {
+        method: 'DELETE',
+        headers: { 'Cache-Control': 'no-cache' },
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to delete product from database');
+      }
 
-    fetch(`/api/products/${id}`, {
-      method: 'DELETE',
-    }).catch((err) => console.error('Failed to delete product in API:', err));
-
-    toast.success('Product Removed');
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      toast.success('Product permanently deleted');
+      return true;
+    } catch (err: any) {
+      console.error('Failed to delete product in API:', err);
+      toast.error(err?.message || 'Failed to delete product from database');
+      return false;
+    }
   };
 
   const addCategory = async (cat: Omit<Category, 'id'>): Promise<boolean> => {
