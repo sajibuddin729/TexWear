@@ -291,26 +291,31 @@ export default function CheckoutPage() {
                   </span>
                 </label>
 
-                <label
-                  className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
-                    paymentMethod === 'bKash / Mobile Wallet'
-                      ? 'bg-pink-50 dark:bg-pink-950/40 border-pink-500 text-pink-900 dark:text-pink-200'
-                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
-                  }`}
+                {/* Coming Soon: Mobile Wallet / Online Payment */}
+                <div
+                  className="flex items-center justify-between p-4 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-900/50 opacity-75 cursor-not-allowed select-none transition-all"
+                  title="Mobile Wallet / Online Payment is coming soon"
                 >
                   <div className="flex items-center gap-3">
                     <input
                       type="radio"
                       name="payment"
-                      checked={paymentMethod === 'bKash / Mobile Wallet'}
-                      onChange={() => setPaymentMethod('bKash / Mobile Wallet')}
+                      disabled
+                      className="accent-slate-400 cursor-not-allowed"
                     />
                     <div>
-                      <span className="font-extrabold text-xs block">bKash / Nagad Mobile Wallet</span>
-                      <span className="text-[11px] text-slate-500">বিকাশ বা নগদের মাধ্যমে প্রিপেইড পেমেন্ট</span>
+                      <span className="font-extrabold text-xs block text-slate-700 dark:text-slate-400">
+                        Mobile Wallet / Online Payment (bKash, Nagad, Cards)
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-500">
+                        বিকাশ, নগদ ও অনলাইন পেমেন্ট খুব শীঘ্রই চালু হচ্ছে
+                      </span>
                     </div>
                   </div>
-                </label>
+                  <span className="bg-amber-500/20 text-amber-500 border border-amber-500/30 font-black text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    COMING SOON
+                  </span>
+                </div>
               </div>
             </div>
           </div>

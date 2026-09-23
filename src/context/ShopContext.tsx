@@ -55,10 +55,49 @@ interface ShopContextType {
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_KEY_CATEGORIES = 'texwear_categories_v3';
 const LOCAL_STORAGE_KEY_CART = 'texwear_cart_v2';
 const LOCAL_STORAGE_KEY_WISHLIST = 'texwear_wishlist_v2';
-const LOCAL_STORAGE_KEY_ORDERS = 'texwear_orders_v2';
+
+// Safe localStorage helper to prevent QuotaExceededError crashes
+const safeSetLocalStorage = (key: string, value: string) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, value);
+  } catch (error) {
+    console.warn(`[ShopContext] Quota exceeded for localStorage key "${key}". Cleaning up heavy caches...`, error);
+    try {
+      // Clear non-essential large legacy caches (categories, orders, products)
+      localStorage.removeItem('texwear_categories_v3');
+      localStorage.removeItem('texwear_orders_v2');
+      localStorage.removeItem('texwear_categories');
+      localStorage.removeItem('texwear_orders');
+      localStorage.removeItem('texwear_products');
+      localStorage.setItem(key, value);
+    } catch (retryError) {
+      console.warn(`[ShopContext] Could not persist "${key}" to localStorage even after cleanup:`, retryError);
+    }
+  }
+};
+
+// Slim down cart items to store only essential data in localStorage
+const serializeCart = (cartItems: CartItem[]) => {
+  return cartItems.map((item) => ({
+    product: {
+      id: item.product.id,
+      title: item.product.title,
+      slug: item.product.slug,
+      sku: item.product.sku,
+      price: item.product.price,
+      originalPrice: item.product.originalPrice,
+      images: item.product.images?.length > 0 ? [item.product.images[0]] : [],
+      categoryName: item.product.categoryName,
+      categoryId: item.product.categoryId,
+    },
+    selectedSize: item.selectedSize,
+    selectedColor: item.selectedColor,
+    quantity: item.quantity,
+  }));
+};
 
 export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -144,11 +183,34 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setStoreLocations(storesRes.value.stores);
         }
 
+        // Clean up any heavy legacy caches from previous versions to free up quota
+        try {
+          localStorage.removeItem('texwear_categories_v3');
+          localStorage.removeItem('texwear_orders_v2');
+          localStorage.removeItem('texwear_categories');
+          localStorage.removeItem('texwear_orders');
+          localStorage.removeItem('texwear_products');
+        } catch (_) {}
+
         const savedCart = localStorage.getItem(LOCAL_STORAGE_KEY_CART);
-        if (savedCart) setCart(JSON.parse(savedCart));
+        if (savedCart) {
+          try {
+            const parsed = JSON.parse(savedCart);
+            if (Array.isArray(parsed)) setCart(parsed);
+          } catch (e) {
+            console.error('Error parsing cart from localStorage', e);
+          }
+        }
 
         const savedWishlist = localStorage.getItem(LOCAL_STORAGE_KEY_WISHLIST);
-        if (savedWishlist) setWishlist(JSON.parse(savedWishlist));
+        if (savedWishlist) {
+          try {
+            const parsed = JSON.parse(savedWishlist);
+            if (Array.isArray(parsed)) setWishlist(parsed);
+          } catch (e) {
+            console.error('Error parsing wishlist from localStorage', e);
+          }
+        }
       } catch (e) {
         console.error('Error loading data from API', e);
       }
@@ -158,20 +220,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY_CATEGORIES, JSON.stringify(categories));
-  }, [categories]);
-
-  useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY_CART, JSON.stringify(cart));
+    safeSetLocalStorage(LOCAL_STORAGE_KEY_CART, JSON.stringify(serializeCart(cart)));
   }, [cart]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY_WISHLIST, JSON.stringify(wishlist));
+    safeSetLocalStorage(LOCAL_STORAGE_KEY_WISHLIST, JSON.stringify(wishlist));
   }, [wishlist]);
-
-  useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY_ORDERS, JSON.stringify(orders));
-  }, [orders]);
 
   // Cart Handlers
   const addToCart = (
