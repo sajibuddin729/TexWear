@@ -99,6 +99,31 @@ const serializeCart = (cartItems: CartItem[]) => {
   }));
 };
 
+// Safe JSON parser to handle 413 Request Entity Too Large or non-JSON server errors gracefully
+async function safeParseJson(res: Response, fallbackError = 'Request failed') {
+  const text = await res.text();
+  if (!res.ok) {
+    if (res.status === 413 || text.includes('Request Entity Too Large') || text.includes('Request En')) {
+      throw new Error('Image or data size is too large (413 Request Entity Too Large). Please upload a smaller image.');
+    }
+    try {
+      const err = JSON.parse(text);
+      throw new Error(err.error || err.message || `Server error (${res.status})`);
+    } catch {
+      throw new Error(text.slice(0, 150) || fallbackError);
+    }
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    if (text.includes('Request Entity Too Large') || text.includes('Request En')) {
+      throw new Error('Image or data size is too large (413 Request Entity Too Large).');
+    }
+    throw new Error('Server returned an invalid JSON response');
+  }
+}
+
 export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
@@ -317,17 +342,26 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isInWishlist = (productId: string) => wishlist.includes(productId);
 
-  // Helper function to upload base64 images
+  // Helper function to upload base64 images safely via binary FormData
   const uploadImageIfNeeded = async (img: string): Promise<string> => {
     if (img.startsWith('data:image/')) {
       try {
+        const blobRes = await fetch(img);
+        const blob = await blobRes.blob();
+        const formData = new FormData();
+        formData.append('file', blob, 'image.jpg');
+
         const res = await fetch('/api/upload', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: img }),
+          body: formData,
         });
-        const data = await res.json();
-        if (data.success && data.url) return data.url;
+
+        if (res.ok) {
+          const data = await safeParseJson(res, 'Failed to parse image upload response');
+          if (data.success && data.url) return data.url;
+        } else {
+          console.warn('Image upload endpoint returned status:', res.status);
+        }
       } catch (e) {
         console.error('Image upload failed:', e);
       }
@@ -429,7 +463,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(prodData),
       });
-      const data = await res.json();
+      const data = await safeParseJson(res, 'Failed to create product in database');
       if (data.success && data.data) {
         setProducts((prev) => [data.data, ...prev]);
         toast.success('Product Added & Saved to Database!');
@@ -463,7 +497,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(prodData),
       });
-      const data = await res.json();
+      const data = await safeParseJson(res, 'Failed to update product in database');
       if (data.success) {
         if (data.data) {
           setProducts((prev) => prev.map((p) => (p.id === updated.id ? data.data : p)));
@@ -473,9 +507,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         throw new Error(data.error || 'Failed to update product in database');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to update product in API:', err);
-      toast.error('Failed to save update to database');
+      toast.error(err?.message || 'Failed to save update to database');
       return false;
     }
   };
@@ -549,7 +583,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(catData),
       });
-      const data = await res.json();
+      const data = await safeParseJson(res, 'Failed to create category');
       if (data.success && data.data) {
         setCategories((prev) => [...prev, data.data]);
         toast.success('Category Created Successfully!');
@@ -558,9 +592,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.error(data.error || 'Failed to create category');
         return false;
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to add category to API:', e);
-      toast.error('Error creating category in server');
+      toast.error(e?.message || 'Error creating category in server');
       return false;
     }
   };
@@ -583,7 +617,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(catData),
       });
-      const data = await res.json();
+      const data = await safeParseJson(res, 'Failed to update category');
       if (data.success && data.data) {
         setCategories((prev) => prev.map((c) => (c.id === updated.id ? data.data : c)));
         toast.success('Category Updated Successfully!');
@@ -592,9 +626,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.error(data.error || 'Failed to update category');
         return false;
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to update category in API:', err);
-      toast.error('Error updating category in server');
+      toast.error(err?.message || 'Error updating category in server');
       return false;
     }
   };

@@ -56,7 +56,7 @@ export default function AdminCategoriesPage() {
   };
 
   // Helper to compress/optimize image before storing
-  const compressImage = (file: File, maxWidth = 1000, quality = 0.85): Promise<string> => {
+  const compressImage = (file: File, maxWidth = 1000, quality = 0.78): Promise<string> => {
     return new Promise((resolve, reject) => {
       if (file.type === 'image/svg+xml' || file.size < 80 * 1024) {
         const reader = new FileReader();
@@ -105,17 +105,40 @@ export default function AdminCategoriesPage() {
     });
   };
 
-  // Device File Upload Handler (FileReader -> base64 with auto-compression)
+  // Device File Upload Handler (Compress + upload via binary FormData to keep payload small)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsUploading(true);
     try {
-      const result = await compressImage(file);
-      if (result) {
-        setImageUrl(result);
-        toast.success(`Image uploaded from device: ${file.name}`);
+      const compressedDataUrl = await compressImage(file);
+      if (compressedDataUrl) {
+        // Attempt direct FormData upload to /api/upload to avoid 413 JSON payload limit
+        try {
+          const blob = await (await fetch(compressedDataUrl)).blob();
+          const formData = new FormData();
+          formData.append('file', blob, file.name || 'category.jpg');
+
+          const uploadRes = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json();
+            if (uploadData.success && uploadData.url) {
+              setImageUrl(uploadData.url);
+              toast.success(`Image uploaded: ${file.name}`);
+              return;
+            }
+          }
+        } catch (uploadErr) {
+          console.warn('Direct upload fallback to compressed data URL:', uploadErr);
+        }
+
+        setImageUrl(compressedDataUrl);
+        toast.success(`Image uploaded: ${file.name}`);
       }
     } catch {
       toast.error('Failed to read image file from device');

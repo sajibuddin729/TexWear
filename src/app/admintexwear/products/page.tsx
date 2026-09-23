@@ -189,9 +189,9 @@ export default function AdminProductsPage() {
   };
 
   // Helper to compress/optimize image before storing
-  const compressImage = (file: File, maxWidth = 1200, quality = 0.85): Promise<string> => {
+  const compressImage = (file: File, maxWidth = 1000, quality = 0.78): Promise<string> => {
     return new Promise((resolve, reject) => {
-      if (file.type === 'image/svg+xml' || file.size < 100 * 1024) {
+      if (file.type === 'image/svg+xml') {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target?.result as string);
         reader.onerror = reject;
@@ -226,8 +226,7 @@ export default function AdminProductsPage() {
           }
 
           ctx.drawImage(img, 0, 0, width, height);
-          const outputType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-          const dataUrl = canvas.toDataURL(outputType, quality);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
           resolve(dataUrl);
         };
         img.onerror = () => resolve(event.target?.result as string);
@@ -238,16 +237,40 @@ export default function AdminProductsPage() {
     });
   };
 
-  // Device File Upload Handler (FileReader -> base64 with auto-compression)
+  // Device File Upload Handler (Compress + upload via binary FormData to keep payload small)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     for (const file of Array.from(files)) {
       try {
-        const result = await compressImage(file);
-        if (result) {
-          setImages((prev) => [...prev, result]);
+        const compressedDataUrl = await compressImage(file);
+        if (compressedDataUrl) {
+          // Attempt direct FormData upload to /api/upload to avoid 413 JSON payload limit
+          try {
+            const blob = await (await fetch(compressedDataUrl)).blob();
+            const formData = new FormData();
+            formData.append('file', blob, file.name || 'product.jpg');
+
+            const uploadRes = await fetch('/api/upload', {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (uploadRes.ok) {
+              const uploadData = await uploadRes.json();
+              if (uploadData.success && uploadData.url) {
+                setImages((prev) => [...prev, uploadData.url]);
+                toast.success(`Uploaded ${file.name}`);
+                continue;
+              }
+            }
+          } catch (uploadErr) {
+            console.warn('Direct upload fallback to compressed data URL:', uploadErr);
+          }
+
+          // Fallback to lightweight compressed base64
+          setImages((prev) => [...prev, compressedDataUrl]);
           toast.success(`Uploaded ${file.name}`);
         }
       } catch {
