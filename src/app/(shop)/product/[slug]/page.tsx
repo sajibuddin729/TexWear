@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, use } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useShop } from '@/context/ShopContext';
 import { ProductCard } from '@/components/shop/ProductCard';
+import { SizeGuideModal } from '@/components/shop/SizeGuideModal';
 import {
   Heart,
   ShoppingBag,
@@ -19,14 +20,28 @@ import toast from 'react-hot-toast';
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = use(params);
-  const { products, addToCart, toggleWishlist, isInWishlist, setQuickOrderProduct } = useShop();
+  const { products, siteSettings, addToCart, toggleWishlist, isInWishlist, setQuickOrderProduct } = useShop();
 
   const product = products.find((p) => p.slug === resolvedParams.slug) || products[0];
 
   const [selectedImg, setSelectedImg] = useState<string>(product?.images[0] || '');
   const [selectedSize, setSelectedSize] = useState<string>(product?.sizes[0] || 'M');
+  const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string }>(
+    product?.colors?.[0] || { name: 'Standard', hex: '#000000' }
+  );
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'shipping'>('desc');
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+
+  useEffect(() => {
+    if (product) {
+      if (product.images?.[0]) setSelectedImg(product.images[0]);
+      if (product.sizes?.[0]) setSelectedSize(product.sizes[0]);
+      if (product.colors && product.colors.length > 0) {
+        setSelectedColor(product.colors[0]);
+      }
+    }
+  }, [product?.id]);
 
   if (!product) {
     return (
@@ -47,8 +62,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
     .slice(0, 4);
 
   const handleAddToCart = () => {
-    const defaultColor = product.colors?.[0] || { name: 'Standard', hex: '#000000' };
-    addToCart(product, selectedSize, defaultColor, quantity);
+    const colorToUse = selectedColor?.name ? selectedColor : (product.colors?.[0] || { name: 'Standard', hex: '#000000' });
+    addToCart(product, selectedSize, colorToUse, quantity);
   };
 
   const handleQuickBuy = () => {
@@ -166,9 +181,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                     <span className="font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
                       Select Size:
                     </span>
-                    <span className="text-sky-600 font-bold underline cursor-pointer">
+                    <button
+                      type="button"
+                      onClick={() => setIsSizeGuideOpen(true)}
+                      className="text-sky-600 dark:text-sky-400 font-bold underline cursor-pointer hover:text-sky-500 transition-colors"
+                    >
                       Size Guide
-                    </span>
+                    </button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {product.sizes.map((sz) => (
@@ -188,6 +207,39 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 </div>
               )}
 
+              {/* Color Selector */}
+              {product.colors && product.colors.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
+                      Select Color: <span className="text-sky-600 dark:text-sky-400 font-bold ml-1">{selectedColor.name}</span>
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2.5">
+                    {product.colors.map((c, idx) => {
+                      const isSelected = selectedColor.name === c.name;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setSelectedColor(c)}
+                          className={`group flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            isSelected
+                              ? 'border-sky-600 bg-sky-50 dark:bg-sky-950/40 text-sky-900 dark:text-sky-200 shadow-sm ring-2 ring-sky-500/20'
+                              : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-600'
+                          }`}
+                        >
+                          <span
+                            className="w-3.5 h-3.5 rounded-full border border-slate-300 dark:border-slate-600 shadow-inner shrink-0"
+                            style={{ backgroundColor: c.hex }}
+                          />
+                          <span>{c.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Quantity */}
               <div className="space-y-2">
@@ -237,10 +289,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
             {/* Delivery Info Hotline Box */}
             <div className="p-4 rounded-xl bg-sky-50 dark:bg-slate-800/60 border border-sky-200 dark:border-slate-700 space-y-2 text-xs">
-              <div className="flex items-center gap-2 font-bold text-sky-800 dark:text-sky-300">
-                <PhoneCall className="w-4 h-4" />
-                <span>Need help ordering? Call hotline: +8801623446677</span>
-              </div>
+              <a
+                href={`tel:${siteSettings?.phone || '+8801623446677'}`}
+                className="flex items-center gap-2 font-bold text-sky-800 dark:text-sky-300 hover:underline"
+              >
+                <PhoneCall className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                <span>Need help ordering? Call hotline: {siteSettings?.phone || '+8801623446677'}</span>
+              </a>
               <div className="grid grid-cols-2 gap-2 text-slate-600 dark:text-slate-400 text-[11px] pt-1">
                 <div className="flex items-center gap-1">
                   <Truck className="w-3.5 h-3.5 text-sky-600" />
@@ -291,7 +346,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           </div>
 
           <div className="text-xs md:text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-4">
-            {activeTab === 'desc' && <p>{product.description}</p>}
+            {activeTab === 'desc' && (
+              <div
+                className="rich-description text-slate-700 dark:text-slate-300 overflow-x-auto"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
+            )}
             {activeTab === 'specs' && (
               <ul className="list-disc pl-5 space-y-1">
                 {product.details?.map((dt, i) => (
@@ -324,6 +384,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           </div>
         )}
       </div>
+
+      {/* Official Size Guide Modal */}
+      <SizeGuideModal
+        isOpen={isSizeGuideOpen}
+        onClose={() => setIsSizeGuideOpen(false)}
+        defaultTab={
+          /pant|jean|denim|trouser|gabardine/i.test((product.title || '') + ' ' + (product.categoryName || ''))
+            ? 'pants'
+            : /shoe|sandal|loafer|sneaker|footwear/i.test((product.title || '') + ' ' + (product.categoryName || ''))
+            ? 'shoes'
+            : 'tops'
+        }
+      />
     </div>
   );
 }

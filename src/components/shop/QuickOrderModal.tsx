@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useShop } from '@/context/ShopContext';
 import { X, Zap, ShieldCheck, CheckCircle2 } from 'lucide-react';
@@ -13,6 +13,14 @@ export const QuickOrderModal: React.FC = () => {
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string }>({ name: '', hex: '' });
   const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    if (quickOrderProduct) {
+      setSelectedSize(quickOrderProduct.sizes?.[0] || 'Standard');
+      setSelectedColor(quickOrderProduct.colors?.[0] || { name: 'Default', hex: '#000000' });
+      setQuantity(1);
+    }
+  }, [quickOrderProduct?.id]);
 
   // Form Fields
   const [fullName, setFullName] = useState('');
@@ -116,24 +124,51 @@ export const QuickOrderModal: React.FC = () => {
               </p>
 
               {/* Variant Selector */}
-              <div className="flex flex-wrap gap-3 pt-1 text-xs">
+              <div className="flex flex-col gap-2 pt-1 text-xs">
                 {/* Size */}
                 {product.sizes.length > 0 && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-slate-500 font-medium">Size:</span>
-                    <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-1">
                       {product.sizes.map((sz) => (
                         <button
                           key={sz}
                           type="button"
                           onClick={() => setSelectedSize(sz)}
-                          className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-all ${
+                          className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-all cursor-pointer ${
                             currentSize === sz
                               ? 'bg-sky-600 text-white border-sky-600'
-                              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+                              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-sky-500'
                           }`}
                         >
                           {sz}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Color */}
+                {product.colors && product.colors.length > 0 && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-slate-500 font-medium">Color:</span>
+                    <div className="flex flex-wrap items-center gap-1">
+                      {product.colors.map((c, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setSelectedColor(c)}
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold border transition-all cursor-pointer ${
+                            currentColor.name === c.name
+                              ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
+                              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-sky-500'
+                          }`}
+                        >
+                          <span
+                            className="w-2.5 h-2.5 rounded-full border border-slate-300 dark:border-slate-600 shrink-0"
+                            style={{ backgroundColor: c.hex }}
+                          />
+                          <span>{c.name}</span>
                         </button>
                       ))}
                     </div>

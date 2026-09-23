@@ -5,6 +5,23 @@ import { useShop } from '@/context/ShopContext';
 import { Product } from '@/types';
 import { Plus, Search, Trash2, Edit, X, Package, Upload, Image as ImageIcon, Check, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { RichTextEditor } from '@/components/admin/RichTextEditor';
+
+const POPULAR_COLORS = [
+  { name: 'Black', hex: '#000000' },
+  { name: 'Navy Blue', hex: '#0f172a' },
+  { name: 'Royal Blue', hex: '#2563eb' },
+  { name: 'Sky Blue', hex: '#38bdf8' },
+  { name: 'White', hex: '#ffffff' },
+  { name: 'Charcoal', hex: '#334155' },
+  { name: 'Gray', hex: '#64748b' },
+  { name: 'Olive Green', hex: '#4d7c0f' },
+  { name: 'Forest Green', hex: '#14532d' },
+  { name: 'Maroon', hex: '#881337' },
+  { name: 'Red', hex: '#dc2626' },
+  { name: 'Beige / Khaki', hex: '#d4b996' },
+  { name: 'Brown', hex: '#78350f' },
+];
 
 export default function AdminProductsPage() {
   const { products, productsLoaded, categories, addProduct, updateProduct, deleteProduct, toggleFlashSale } = useShop();
@@ -25,10 +42,74 @@ export default function AdminProductsPage() {
   const [images, setImages] = useState<string[]>([]);
   const [urlInput, setUrlInput] = useState('');
   const [sizes, setSizes] = useState<string[]>(['M', 'L', 'XL']);
+  const [customSizeInput, setCustomSizeInput] = useState('');
+  const [colors, setColors] = useState<{ name: string; hex: string }[]>([
+    { name: 'Black', hex: '#000000' },
+    { name: 'Navy Blue', hex: '#0f172a' },
+  ]);
+  const [customColorName, setCustomColorName] = useState('');
+  const [customColorHex, setCustomColorHex] = useState('#2563eb');
   const [description, setDescription] = useState('');
   const [stockCount, setStockCount] = useState<number>(30);
   const [isFlashSale, setIsFlashSale] = useState(false);
   const [isNewArrival, setIsNewArrival] = useState(true);
+
+  // Size helper functions
+  const handleToggleSize = (sizeToAddOrRemove: string) => {
+    const trimmed = sizeToAddOrRemove.trim();
+    if (!trimmed) return;
+    if (sizes.includes(trimmed)) {
+      setSizes(sizes.filter((s) => s !== trimmed));
+    } else {
+      setSizes([...sizes, trimmed]);
+    }
+  };
+
+  const handleAddCustomSize = () => {
+    const trimmed = customSizeInput.trim();
+    if (!trimmed) return;
+    if (!sizes.includes(trimmed)) {
+      setSizes([...sizes, trimmed]);
+    }
+    setCustomSizeInput('');
+  };
+
+  const handleRemoveSize = (sizeToRemove: string) => {
+    setSizes(sizes.filter((s) => s !== sizeToRemove));
+  };
+
+  const handleSetPresetSizes = (presetSizes: string[]) => {
+    setSizes(presetSizes);
+  };
+
+  // Color helper functions
+  const handleToggleColor = (colorItem: { name: string; hex: string }) => {
+    const exists = colors.some((c) => c.name.toLowerCase() === colorItem.name.toLowerCase());
+    if (exists) {
+      setColors(colors.filter((c) => c.name.toLowerCase() !== colorItem.name.toLowerCase()));
+    } else {
+      setColors([...colors, colorItem]);
+    }
+  };
+
+  const handleAddCustomColor = () => {
+    const trimmedName = customColorName.trim();
+    if (!trimmedName) {
+      toast.error('Please enter a color name (e.g. Olive, Sky Blue)');
+      return;
+    }
+    const exists = colors.some((c) => c.name.toLowerCase() === trimmedName.toLowerCase());
+    if (exists) {
+      toast.error('This color is already added');
+      return;
+    }
+    setColors([...colors, { name: trimmedName, hex: customColorHex }]);
+    setCustomColorName('');
+  };
+
+  const handleRemoveColor = (nameToRemove: string) => {
+    setColors(colors.filter((c) => c.name !== nameToRemove));
+  };
 
   const handleDeleteProduct = async (product: Product) => {
     if (!confirm(`Are you sure you want to permanently delete "${product.title}"?\nThis action will immediately and permanently delete this product from the database.`)) {
@@ -65,6 +146,13 @@ export default function AdminProductsPage() {
     setImages([]);
     setUrlInput('');
     setSizes(['M', 'L', 'XL', 'XXL']);
+    setCustomSizeInput('');
+    setColors([
+      { name: 'Black', hex: '#000000' },
+      { name: 'Navy Blue', hex: '#0f172a' },
+    ]);
+    setCustomColorName('');
+    setCustomColorHex('#2563eb');
     setDescription('Premium TEX WEAR crafted product with modern silhouette and comfortable fabric.');
     setStockCount(40);
     setIsFlashSale(false);
@@ -81,7 +169,18 @@ export default function AdminProductsPage() {
     setCategoryId(product.categoryId);
     setImages(product.images && product.images.length > 0 ? product.images : []);
     setUrlInput('');
-    setSizes(product.sizes);
+    setSizes(product.sizes && product.sizes.length > 0 ? product.sizes : ['M', 'L', 'XL']);
+    setCustomSizeInput('');
+    setColors(
+      product.colors && product.colors.length > 0
+        ? product.colors
+        : [
+            { name: 'Black', hex: '#000000' },
+            { name: 'Navy Blue', hex: '#0f172a' },
+          ]
+    );
+    setCustomColorName('');
+    setCustomColorHex('#2563eb');
     setDescription(product.description);
     setStockCount(product.stockCount);
     setIsFlashSale(!!product.isFlashSale);
@@ -181,6 +280,16 @@ export default function AdminProductsPage() {
       return;
     }
 
+    if (!sizes || sizes.length === 0) {
+      toast.error('Please select or add at least one available size (e.g. 30, 31, 32 or M, L, XL)');
+      return;
+    }
+
+    if (!colors || colors.length === 0) {
+      toast.error('Please select or add at least one color for the product');
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -202,10 +311,7 @@ export default function AdminProductsPage() {
         categoryName,
         images: finalImages,
         sizes,
-        colors: editingProduct?.colors && editingProduct.colors.length > 0 ? editingProduct.colors : [
-          { name: 'Navy', hex: '#0f172a' },
-          { name: 'Black', hex: '#000000' },
-        ],
+        colors,
         description,
         details: editingProduct?.details && editingProduct.details.length > 0 ? editingProduct.details : ['Fabric: Premium Cotton Blend', 'Fit: Modern Comfort Fit', 'Care: Machine Wash Cold'],
         inStock: stockCount > 0,
@@ -360,9 +466,22 @@ export default function AdminProductsPage() {
                         />
                         <div>
                           <h4 className="font-bold text-white max-w-xs line-clamp-1">{product.title}</h4>
-                          <span className="text-[10px] text-slate-500">
-                            Sizes: {product.sizes.join(', ')}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-slate-500 mt-0.5">
+                            <span>Sizes: {product.sizes?.join(', ')}</span>
+                            {product.colors && product.colors.length > 0 && (
+                              <span className="flex items-center gap-1">
+                                • Colors:
+                                {product.colors.map((c, i) => (
+                                  <span
+                                    key={i}
+                                    className="w-2.5 h-2.5 rounded-full border border-slate-600 inline-block shadow-xs"
+                                    style={{ backgroundColor: c.hex }}
+                                    title={c.name}
+                                  />
+                                ))}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -523,6 +642,295 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
+              {/* Available Sizes Management */}
+              <div className="space-y-3 p-4 bg-slate-900 rounded-2xl border border-slate-800">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <label className="block font-extrabold text-slate-200 uppercase tracking-wider">
+                      Available Sizes *
+                    </label>
+                    <p className="text-[11px] text-slate-400">
+                      Select preset sizes, click to toggle, or type custom sizes (e.g. 30, 31, 32, M, L, XL).
+                    </p>
+                  </div>
+                  {sizes.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSizes([])}
+                      className="text-[11px] text-rose-400 hover:text-rose-300 font-semibold transition-colors"
+                    >
+                      Clear All ({sizes.length})
+                    </button>
+                  )}
+                </div>
+
+                {/* Quick Presets */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[11px] font-bold text-slate-400 mr-1">Presets:</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSetPresetSizes(['28', '30', '31', '32', '33', '34', '36', '38'])}
+                    className="px-2.5 py-1 text-[11px] font-bold bg-slate-950 hover:bg-slate-800 text-sky-400 border border-slate-700 hover:border-sky-500 rounded-lg transition-colors"
+                  >
+                    Pants (28-38)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetPresetSizes(['S', 'M', 'L', 'XL', 'XXL', '3XL'])}
+                    className="px-2.5 py-1 text-[11px] font-bold bg-slate-950 hover:bg-slate-800 text-sky-400 border border-slate-700 hover:border-sky-500 rounded-lg transition-colors"
+                  >
+                    Shirts / Panjabi (S-3XL)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetPresetSizes(['M', 'L', 'XL', 'XXL'])}
+                    className="px-2.5 py-1 text-[11px] font-bold bg-slate-950 hover:bg-slate-800 text-sky-400 border border-slate-700 hover:border-sky-500 rounded-lg transition-colors"
+                  >
+                    Standard (M-XXL)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetPresetSizes(['39', '40', '41', '42', '43', '44', '45'])}
+                    className="px-2.5 py-1 text-[11px] font-bold bg-slate-950 hover:bg-slate-800 text-sky-400 border border-slate-700 hover:border-sky-500 rounded-lg transition-colors"
+                  >
+                    Shoes (39-45)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetPresetSizes(['Free Size'])}
+                    className="px-2.5 py-1 text-[11px] font-bold bg-slate-950 hover:bg-slate-800 text-sky-400 border border-slate-700 hover:border-sky-500 rounded-lg transition-colors"
+                  >
+                    Free Size
+                  </button>
+                </div>
+
+                {/* Common Size Toggles */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="text-[11px] font-semibold text-slate-400">Quick Toggle Pants Sizes:</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['28', '29', '30', '31', '32', '33', '34', '35', '36', '38', '40'].map((sz) => {
+                      const isSelected = sizes.includes(sz);
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => handleToggleSize(sz)}
+                          className={`w-9 h-8 rounded-lg text-xs font-black transition-all ${
+                            isSelected
+                              ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30 ring-1 ring-sky-400'
+                              : 'bg-slate-950 text-slate-300 border border-slate-800 hover:border-slate-600'
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="text-[11px] font-semibold text-slate-400">Quick Toggle Tops Sizes:</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'].map((sz) => {
+                      const isSelected = sizes.includes(sz);
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => handleToggleSize(sz)}
+                          className={`min-w-9 h-8 px-2 rounded-lg text-xs font-black transition-all ${
+                            isSelected
+                              ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30 ring-1 ring-sky-400'
+                              : 'bg-slate-950 text-slate-300 border border-slate-800 hover:border-slate-600'
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom Size Input & Active Chips */}
+                <div className="pt-2 border-t border-slate-800 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Add custom size (e.g. 31.5, 42, Slim, etc.)..."
+                      value={customSizeInput}
+                      onChange={(e) => setCustomSizeInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddCustomSize();
+                        }
+                      }}
+                      className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs flex-1 font-semibold focus:outline-none focus:border-sky-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCustomSize}
+                      className="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl text-xs transition-colors"
+                    >
+                      + Add Size
+                    </button>
+                  </div>
+
+                  {/* Active Selected Sizes List */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <span className="text-[11px] font-bold text-slate-400">Selected:</span>
+                    {sizes.length === 0 ? (
+                      <span className="text-[11px] text-amber-400 font-semibold italic">
+                        No size selected! Please select or add at least one size.
+                      </span>
+                    ) : (
+                      sizes.map((sz) => (
+                        <span
+                          key={sz}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-sky-950 border border-sky-600/50 text-sky-200 text-xs font-bold rounded-lg group"
+                        >
+                          <span>{sz}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSize(sz)}
+                            className="text-sky-400 hover:text-white rounded-full p-0.5 hover:bg-sky-800/60 transition-colors"
+                            title={`Remove size ${sz}`}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Available Colors Management */}
+              <div className="space-y-3 p-4 bg-slate-900 rounded-2xl border border-slate-800">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <label className="block font-extrabold text-slate-200 uppercase tracking-wider">
+                      Available Colors *
+                    </label>
+                    <p className="text-[11px] text-slate-400">
+                      Select popular garment colors or add custom color with name and color picker.
+                    </p>
+                  </div>
+                  {colors.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setColors([])}
+                      className="text-[11px] text-rose-400 hover:text-rose-300 font-semibold transition-colors"
+                    >
+                      Clear All ({colors.length})
+                    </button>
+                  )}
+                </div>
+
+                {/* Popular Color Quick Toggles */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="text-[11px] font-semibold text-slate-400">Popular Clothing Colors (Click to toggle):</div>
+                  <div className="flex flex-wrap gap-2">
+                    {POPULAR_COLORS.map((c) => {
+                      const isSelected = colors.some((item) => item.name.toLowerCase() === c.name.toLowerCase());
+                      return (
+                        <button
+                          key={c.name}
+                          type="button"
+                          onClick={() => handleToggleColor(c)}
+                          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                            isSelected
+                              ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30 ring-1 ring-sky-400'
+                              : 'bg-slate-950 text-slate-300 border border-slate-800 hover:border-slate-600'
+                          }`}
+                        >
+                          <span
+                            className="w-3.5 h-3.5 rounded-full border border-slate-500/80 shadow-xs shrink-0"
+                            style={{ backgroundColor: c.hex }}
+                          />
+                          <span>{c.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom Color Input & Color Picker */}
+                <div className="pt-2 border-t border-slate-800 space-y-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-2">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <div className="relative flex items-center justify-center w-10 h-9 rounded-xl border border-slate-700 bg-slate-950 overflow-hidden cursor-pointer shrink-0">
+                        <input
+                          type="color"
+                          value={customColorHex}
+                          onChange={(e) => setCustomColorHex(e.target.value)}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                          title="Choose Color Hex"
+                        />
+                        <div
+                          className="w-6 h-6 rounded-lg border border-slate-600 shadow-inner"
+                          style={{ backgroundColor: customColorHex }}
+                        />
+                      </div>
+                      <span className="text-[11px] font-mono text-slate-400">{customColorHex.toUpperCase()}</span>
+                    </div>
+
+                    <input
+                      type="text"
+                      placeholder="Color Name (e.g. Light Wash Jeans, Vintage Olive)..."
+                      value={customColorName}
+                      onChange={(e) => setCustomColorName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddCustomColor();
+                        }
+                      }}
+                      className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs flex-1 w-full font-semibold focus:outline-none focus:border-sky-500"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleAddCustomColor}
+                      className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl text-xs whitespace-nowrap transition-colors w-full sm:w-auto cursor-pointer"
+                    >
+                      + Add Color
+                    </button>
+                  </div>
+
+                  {/* Active Selected Colors List */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <span className="text-[11px] font-bold text-slate-400">Selected Colors:</span>
+                    {colors.length === 0 ? (
+                      <span className="text-[11px] text-amber-400 font-semibold italic">
+                        No color selected! Please select or add at least one color.
+                      </span>
+                    ) : (
+                      colors.map((c) => (
+                        <span
+                          key={c.name}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-sky-950 border border-sky-600/50 text-sky-200 text-xs font-bold rounded-lg group"
+                        >
+                          <span
+                            className="w-3 h-3 rounded-full border border-slate-400 shrink-0"
+                            style={{ backgroundColor: c.hex }}
+                          />
+                          <span>{c.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveColor(c.name)}
+                            className="text-sky-400 hover:text-white rounded-full p-0.5 hover:bg-sky-800/60 transition-colors"
+                            title={`Remove color ${c.name}`}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Image Upload & Gallery Box */}
               <div className="space-y-3 p-4 bg-slate-900 rounded-2xl border border-slate-800">
                 <label className="block font-extrabold text-slate-200 uppercase tracking-wider">
@@ -593,12 +1001,18 @@ export default function AdminProductsPage() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-300 mb-1">Description</label>
-                <textarea
-                  rows={3}
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block font-bold text-slate-300">
+                    Product Description & Size/Spec Details (Word-Style)
+                  </label>
+                  <span className="text-[11px] text-sky-400 font-bold bg-sky-950/60 border border-sky-600/30 px-2 py-0.5 rounded-md">
+                    WYSIWYG Word Editor
+                  </span>
+                </div>
+                <RichTextEditor
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white"
+                  onChange={setDescription}
+                  placeholder="Write description, size charts, fabric specs, or insert tables here..."
                 />
               </div>
 
