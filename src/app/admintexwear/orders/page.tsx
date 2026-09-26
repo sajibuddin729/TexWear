@@ -3,13 +3,14 @@
 import React, { useState } from 'react';
 import { useShop } from '@/context/ShopContext';
 import { Order, OrderStatus } from '@/types';
-import { ShoppingBag, Eye, X, PhoneCall, MapPin, CheckCircle } from 'lucide-react';
+import { ShoppingBag, Eye, X, PhoneCall, MapPin, CheckCircle, Trash2 } from 'lucide-react';
 
 export default function AdminOrdersPage() {
-  const { orders, updateOrderStatus } = useShop();
+  const { orders, updateOrderStatus, deleteOrder } = useShop();
 
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const filteredOrders = orders.filter((ord) => {
     if (selectedStatus !== 'all' && ord.status !== selectedStatus) return false;
@@ -23,6 +24,25 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleDeleteOrder = async (order: Order) => {
+    const isCancelled = order.status === 'Cancelled';
+    const confirmMessage = isCancelled
+      ? `Are you sure you want to permanently delete cancelled order "${order.orderNumber}"?\nThis order and its data will be completely deleted from the database.`
+      : `Are you sure you want to permanently delete order "${order.orderNumber}" (Customer: ${order.customer.fullName})?\n\nThis will permanently delete this order from the database. This action cannot be undone.`;
+
+    if (!confirm(confirmMessage)) return;
+
+    setDeletingId(order.id);
+    try {
+      const ok = await deleteOrder(order.id);
+      if (ok && activeOrder && (activeOrder.id === order.id || activeOrder.orderNumber === order.orderNumber)) {
+        setActiveOrder(null);
+      }
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -33,7 +53,7 @@ export default function AdminOrdersPage() {
             <span>Order Management</span>
           </h1>
           <p className="text-xs text-slate-400 font-medium">
-            View customer delivery requests & update dispatch status
+            View customer delivery requests, update dispatch status & delete unwanted/declined orders
           </p>
         </div>
 
@@ -72,40 +92,62 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-900">
-              {filteredOrders.map((ord) => (
-                <tr key={ord.id} className="hover:bg-slate-900/50">
-                  <td className="p-4 font-black text-sky-400">{ord.orderNumber}</td>
-                  <td className="p-4 font-bold text-white">{ord.customer.fullName}</td>
-                  <td className="p-4">{ord.customer.phoneNumber}</td>
-                  <td className="p-4 text-slate-400">{ord.items.length} item(s)</td>
-                  <td className="p-4 font-black text-white">৳{ord.totalAmount.toLocaleString()}</td>
-                  <td className="p-4 font-semibold text-slate-400">{ord.paymentMethod}</td>
-                  <td className="p-4">
-                    <select
-                      value={ord.status}
-                      onChange={(e) =>
-                        handleStatusChange(ord.id, e.target.value as OrderStatus)
-                      }
-                      className="bg-slate-900 border border-slate-700 text-amber-400 font-bold text-[11px] px-2.5 py-1 rounded-lg focus:outline-none cursor-pointer"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Processing">Processing</option>
-                      <option value="Shipped">Shipped</option>
-                      <option value="Delivered">Delivered</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
-                  </td>
-                  <td className="p-4 text-right">
-                    <button
-                      onClick={() => setActiveOrder(ord)}
-                      className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-sky-400 font-bold flex items-center gap-1 ml-auto"
-                    >
-                      <Eye className="w-4 h-4" />
-                      <span>View</span>
-                    </button>
+              {filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-slate-500 font-bold">
+                    No orders found.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredOrders.map((ord) => (
+                  <tr key={ord.id} className="hover:bg-slate-900/50">
+                    <td className="p-4 font-black text-sky-400">{ord.orderNumber}</td>
+                    <td className="p-4 font-bold text-white">{ord.customer.fullName}</td>
+                    <td className="p-4">{ord.customer.phoneNumber}</td>
+                    <td className="p-4 text-slate-400">{ord.items.length} item(s)</td>
+                    <td className="p-4 font-black text-white">৳{ord.totalAmount.toLocaleString()}</td>
+                    <td className="p-4 font-semibold text-slate-400">{ord.paymentMethod}</td>
+                    <td className="p-4">
+                      <select
+                        value={ord.status}
+                        onChange={(e) =>
+                          handleStatusChange(ord.id, e.target.value as OrderStatus)
+                        }
+                        className="bg-slate-900 border border-slate-700 text-amber-400 font-bold text-[11px] px-2.5 py-1 rounded-lg focus:outline-none cursor-pointer"
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setActiveOrder(ord)}
+                          className="p-1.5 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-sky-400 font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                          title="View Order Details"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteOrder(ord)}
+                          disabled={deletingId === ord.id}
+                          className="p-1.5 px-2.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-400 hover:text-red-300 border border-red-900/40 font-bold flex items-center gap-1 transition-all cursor-pointer disabled:opacity-50"
+                          title="Permanently Delete Order from Database"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>{deletingId === ord.id ? 'Deleting...' : 'Delete'}</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -165,7 +207,7 @@ export default function AdminOrdersPage() {
                       <div>
                         <h5 className="font-bold text-white line-clamp-1">{it.product.title}</h5>
                         <p className="text-[10px] text-slate-400">
-                          Size: {it.selectedSize} | Color: {it.selectedColor.name} | Qty: {it.quantity}
+                          Size: {it.selectedSize} {it.selectedColor?.name && it.selectedColor.name !== 'Default' ? `| Color: ${it.selectedColor.name}` : ''} | Qty: {it.quantity}
                         </p>
                       </div>
                     </div>
@@ -177,10 +219,23 @@ export default function AdminOrdersPage() {
               </div>
             </div>
 
-            {/* Total */}
-            <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-sm font-black text-white">
-              <span>Total Payable Amount</span>
-              <span className="text-xl text-sky-400">৳{activeOrder.totalAmount.toLocaleString()}</span>
+            {/* Total and Delete Action */}
+            <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <button
+                type="button"
+                onClick={() => handleDeleteOrder(activeOrder)}
+                disabled={deletingId === activeOrder.id}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-800/60 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                title="Permanently Delete Order from Database"
+              >
+                <Trash2 className="w-4 h-4 text-red-400" />
+                <span>{deletingId === activeOrder.id ? 'Deleting from Database...' : 'Delete Order (ডাটাবেজ থেকে মুছুন)'}</span>
+              </button>
+
+              <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto text-sm font-black text-white">
+                <span className="text-slate-400 text-xs font-normal">Total Amount:</span>
+                <span className="text-xl text-sky-400">৳{activeOrder.totalAmount.toLocaleString()}</span>
+              </div>
             </div>
           </div>
         </div>

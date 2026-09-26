@@ -28,13 +28,29 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   try {
     const { id } = await params;
 
-    await prisma.order.delete({
-      where: { id },
+    const order = await prisma.order.findFirst({
+      where: {
+        OR: [{ id }, { orderId: id }],
+      },
     });
 
-    return NextResponse.json({ success: true, message: 'Order deleted successfully' });
-  } catch (error) {
+    if (!order) {
+      return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
+    }
+
+    // Delete associated items first to guarantee clean deletion
+    await prisma.orderItem.deleteMany({
+      where: { orderId: order.id },
+    });
+
+    // Delete the order itself
+    await prisma.order.delete({
+      where: { id: order.id },
+    });
+
+    return NextResponse.json({ success: true, message: 'Order permanently deleted successfully' });
+  } catch (error: any) {
     console.error('Error deleting order:', error);
-    return NextResponse.json({ success: false, error: 'Failed to delete order' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error?.message || 'Failed to delete order' }, { status: 500 });
   }
 }

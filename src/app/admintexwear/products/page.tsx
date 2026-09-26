@@ -147,10 +147,7 @@ export default function AdminProductsPage() {
     setUrlInput('');
     setSizes(['M', 'L', 'XL', 'XXL']);
     setCustomSizeInput('');
-    setColors([
-      { name: 'Black', hex: '#000000' },
-      { name: 'Navy Blue', hex: '#0f172a' },
-    ]);
+    setColors([]);
     setCustomColorName('');
     setCustomColorHex('#2563eb');
     setDescription('Premium TEX WEAR crafted product with modern silhouette and comfortable fabric.');
@@ -171,14 +168,7 @@ export default function AdminProductsPage() {
     setUrlInput('');
     setSizes(product.sizes && product.sizes.length > 0 ? product.sizes : ['M', 'L', 'XL']);
     setCustomSizeInput('');
-    setColors(
-      product.colors && product.colors.length > 0
-        ? product.colors
-        : [
-            { name: 'Black', hex: '#000000' },
-            { name: 'Navy Blue', hex: '#0f172a' },
-          ]
-    );
+    setColors(product.colors && Array.isArray(product.colors) ? product.colors : []);
     setCustomColorName('');
     setCustomColorHex('#2563eb');
     setDescription(product.description);
@@ -305,11 +295,6 @@ export default function AdminProductsPage() {
 
     if (!sizes || sizes.length === 0) {
       toast.error('Please select or add at least one available size (e.g. 30, 31, 32 or M, L, XL)');
-      return;
-    }
-
-    if (!colors || colors.length === 0) {
-      toast.error('Please select or add at least one color for the product');
       return;
     }
 
@@ -833,19 +818,19 @@ export default function AdminProductsPage() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <label className="block font-extrabold text-slate-200 uppercase tracking-wider">
-                      Available Colors *
+                      Available Colors <span className="text-xs font-bold text-emerald-400 normal-case">(Optional / ঐচ্ছিক)</span>
                     </label>
                     <p className="text-[11px] text-slate-400">
-                      Select popular garment colors or add custom color with name and color picker.
+                      রং সিলেক্ট করা সম্পূর্ণ ঐচ্ছিক। কালার দিতে চাইলে নিচের তালিকা থেকে নির্বাচন করুন বা কাস্টম কালার যোগ করুন; আর প্রয়োজন না হলে এটি ফাঁকা রেখে প্রোডাক্ট সেভ করতে পারবেন।
                     </p>
                   </div>
                   {colors.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setColors([])}
-                      className="text-[11px] text-rose-400 hover:text-rose-300 font-semibold transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60 text-[11px] font-bold transition-all cursor-pointer"
                     >
-                      Clear All ({colors.length})
+                      Clear All Colors ({colors.length})
                     </button>
                   )}
                 </div>
@@ -925,8 +910,8 @@ export default function AdminProductsPage() {
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     <span className="text-[11px] font-bold text-slate-400">Selected Colors:</span>
                     {colors.length === 0 ? (
-                      <span className="text-[11px] text-amber-400 font-semibold italic">
-                        No color selected! Please select or add at least one color.
+                      <span className="text-[11px] text-slate-400 font-medium italic">
+                        No color selected (Optional — This product will be saved without color selection).
                       </span>
                     ) : (
                       colors.map((c) => (

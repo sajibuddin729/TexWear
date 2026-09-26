@@ -38,6 +38,7 @@ interface ShopContextType {
   // Checkout & Order Actions
   placeOrder: (customer: OrderCustomer, paymentMethod: 'Cash on Delivery' | 'bKash / Mobile Wallet', customCart?: CartItem[]) => Order;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
+  deleteOrder: (orderId: string) => Promise<boolean>;
 
   // Admin Mutations
   addProduct: (product: Omit<Product, 'id' | 'createdAt'>) => Promise<boolean>;
@@ -445,6 +446,26 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.success(`Order ${orderId} updated to ${status}`);
   };
 
+  const deleteOrder = async (orderId: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'DELETE',
+      });
+      const data = await safeParseJson(res, 'Failed to delete order from database');
+      if (data.success) {
+        setOrders((prev) => prev.filter((ord) => ord.id !== orderId && ord.orderNumber !== orderId));
+        toast.success(`Order permanently deleted from database`);
+        return true;
+      } else {
+        throw new Error(data.error || 'Failed to delete order');
+      }
+    } catch (err: any) {
+      console.error('Failed to delete order from API:', err);
+      toast.error(err?.message || 'Failed to delete order from database');
+      return false;
+    }
+  };
+
   // Admin Mutations
   const addProduct = async (newProd: Omit<Product, 'id' | 'createdAt'>): Promise<boolean> => {
     // Process base64 images safely
@@ -756,6 +777,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isInWishlist,
         placeOrder,
         updateOrderStatus,
+        deleteOrder,
         addProduct,
         updateProduct,
         deleteProduct,
