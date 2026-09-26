@@ -6,7 +6,7 @@ import { Package, FolderTree, ShoppingBag, DollarSign, ArrowUpRight } from 'luci
 import Link from 'next/link';
 
 export default function AdminDashboardPage() {
-  const { products, categories, orders, productsLoaded, categoriesLoaded } = useShop();
+  const { products, categories, orders, ordersLoaded, productsLoaded, categoriesLoaded } = useShop();
 
   const totalSales = orders.reduce((sum, o) => sum + o.totalAmount, 0);
 
@@ -117,22 +117,36 @@ export default function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-900">
-              {orders.slice(0, 5).map((ord) => (
-                <tr key={ord.id} className="hover:bg-slate-900/60">
-                  <td className="p-3 font-black text-sky-400">{ord.orderNumber}</td>
-                  <td className="p-3 font-bold text-white">{ord.customer.fullName}</td>
-                  <td className="p-3">{ord.customer.phoneNumber}</td>
-                  <td className="p-3 font-black text-white">৳{ord.totalAmount.toLocaleString()}</td>
-                  <td className="p-3">
-                    <span className="bg-amber-500/20 text-amber-400 font-bold text-[10px] uppercase px-2.5 py-1 rounded-full border border-amber-500/30">
-                      {ord.status}
-                    </span>
-                  </td>
-                  <td className="p-3 text-slate-400">
-                    {new Date(ord.createdAt).toLocaleDateString()}
+              {!ordersLoaded ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                    Loading recent orders...
                   </td>
                 </tr>
-              ))}
+              ) : orders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-slate-500 font-bold">
+                    No customer orders yet.
+                  </td>
+                </tr>
+              ) : (
+                orders.slice(0, 5).map((ord) => (
+                  <tr key={ord.id} className="hover:bg-slate-900/60">
+                    <td className="p-3 font-black text-sky-400">{ord.orderNumber}</td>
+                    <td className="p-3 font-bold text-white">{ord.customer.fullName}</td>
+                    <td className="p-3">{ord.customer.phoneNumber}</td>
+                    <td className="p-3 font-black text-white">৳{ord.totalAmount.toLocaleString()}</td>
+                    <td className="p-3">
+                      <span className="bg-amber-500/20 text-amber-400 font-bold text-[10px] uppercase px-2.5 py-1 rounded-full border border-amber-500/30">
+                        {ord.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-slate-400">
+                      {new Date(ord.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

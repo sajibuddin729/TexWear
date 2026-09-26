@@ -1210,31 +1210,4 @@ export const INITIAL_PRODUCTS: Product[] = [
   }
 ];
 
-export const INITIAL_ORDERS: Order[] = [
-  {
-    id: 'ord-1001',
-    orderNumber: 'TW-849201',
-    customer: {
-      fullName: 'Sajib Rahman',
-      phoneNumber: '01712345678',
-      deliveryAddress: 'House 42, Road 11, Block D, Banani',
-      districtArea: 'inside_dhaka',
-      note: 'Please call before delivery.',
-    },
-    items: [
-      {
-        product: INITIAL_PRODUCTS[0],
-        selectedSize: 'L',
-        selectedColor: INITIAL_PRODUCTS[0].colors[0],
-        quantity: 1,
-      },
-    ],
-    subtotal: 2850,
-    shippingFee: 70,
-    discount: 0,
-    totalAmount: 2920,
-    paymentMethod: 'Cash on Delivery',
-    status: 'Pending',
-    createdAt: '2026-08-20T18:30:00Z',
-  },
-];
+export const INITIAL_ORDERS: Order[] = [];

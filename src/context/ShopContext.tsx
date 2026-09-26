@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Product, Category, CartItem, Order, OrderCustomer, Banner } from '@/types';
 import { INITIAL_PRODUCTS, INITIAL_CATEGORIES, INITIAL_BANNERS, INITIAL_ORDERS, INITIAL_SETTINGS, INITIAL_STORES, SiteSettingsData, StoreLocationData } from '@/data/initialData';
 import toast from 'react-hot-toast';
@@ -12,6 +12,8 @@ interface ShopContextType {
   categoriesLoaded: boolean;
   banners: Banner[];
   orders: Order[];
+  ordersLoaded: boolean;
+  refreshOrders: () => Promise<void>;
   cart: CartItem[];
   wishlist: string[];
   siteSettings: SiteSettingsData;
@@ -129,7 +131,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
   const [banners] = useState<Banner[]>(INITIAL_BANNERS);
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoaded, setOrdersLoaded] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettingsData>(INITIAL_SETTINGS);
@@ -142,108 +145,127 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const [productsLoaded, setProductsLoaded] = useState(false);
 
-  // Load data from API / LocalStorage on mount
+  // Fast direct orders fetch
+  const refreshOrders = useCallback(async () => {
+    try {
+      const res = await fetch('/api/orders', { cache: 'no-store' });
+      const data = await res.json();
+      if (data?.success && Array.isArray(data.data)) {
+        const mappedOrders: Order[] = data.data.map((o: any) => ({
+          id: o.id,
+          orderNumber: o.orderId,
+          customer: {
+            fullName: o.customerName,
+            phoneNumber: o.customerPhone,
+            alternativePhone: o.customerEmail || '',
+            deliveryAddress: o.customerAddress,
+            districtArea: o.customerCity,
+            note: o.customerNotes || '',
+          },
+          items: (o.items || []).map((i: any) => ({
+            product: {
+              id: i.productId,
+              title: i.title,
+              price: i.price,
+              images: [i.image || '/final_logo6.png'],
+            } as Product,
+            selectedSize: i.size || 'Standard',
+            selectedColor: { name: i.colorName || 'Default', hex: '#000' },
+            quantity: i.quantity,
+          })),
+          subtotal: o.subtotal,
+          shippingFee: o.shippingFee,
+          discount: o.discount || 0,
+          totalAmount: o.totalAmount,
+          paymentMethod: o.paymentMethod,
+          status: o.status,
+          createdAt: o.createdAt,
+        }));
+        setOrders(mappedOrders);
+      }
+    } catch (e) {
+      console.error('Error fetching orders:', e);
+    } finally {
+      setOrdersLoaded(true);
+    }
+  }, []);
+
+  // Load data independently in parallel without blocking each other
   useEffect(() => {
-    async function loadInitialData() {
+    // 1. Categories
+    fetch('/api/categories', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data.data)) {
+          setCategories(data.data);
+        }
+      })
+      .catch((e) => console.error('Categories load error:', e))
+      .finally(() => setCategoriesLoaded(true));
+
+    // 2. Orders (Fast independent load)
+    refreshOrders();
+
+    // 3. Products
+    fetch('/api/products', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data.data)) {
+          setProducts(data.data);
+        }
+      })
+      .catch((e) => console.error('Products load error:', e))
+      .finally(() => setProductsLoaded(true));
+
+    // 4. Site Settings
+    fetch('/api/settings', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.success && data.settings) {
+          setSiteSettings(data.settings);
+        }
+      })
+      .catch((e) => console.error('Settings load error:', e));
+
+    // 5. Stores
+    fetch('/api/stores', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data.stores)) {
+          setStoreLocations(data.stores);
+        }
+      })
+      .catch((e) => console.error('Stores load error:', e));
+
+    // Clean up any heavy legacy caches from previous versions to free up quota
+    try {
+      localStorage.removeItem('texwear_categories_v3');
+      localStorage.removeItem('texwear_orders_v2');
+      localStorage.removeItem('texwear_categories');
+      localStorage.removeItem('texwear_orders');
+      localStorage.removeItem('texwear_products');
+    } catch (_) {}
+
+    const savedCart = localStorage.getItem(LOCAL_STORAGE_KEY_CART);
+    if (savedCart) {
       try {
-        // Fetch all APIs in parallel with cache: 'no-store' for fresh database data
-        const [catRes, prodRes, orderRes, settingsRes, storesRes] = await Promise.allSettled([
-          fetch('/api/categories', { cache: 'no-store' }).then((r) => r.json()),
-          fetch('/api/products', { cache: 'no-store' }).then((r) => r.json()),
-          fetch('/api/orders', { cache: 'no-store' }).then((r) => r.json()),
-          fetch('/api/settings', { cache: 'no-store' }).then((r) => r.json()),
-          fetch('/api/stores', { cache: 'no-store' }).then((r) => r.json()),
-        ]);
-
-        if (catRes.status === 'fulfilled' && catRes.value?.success && Array.isArray(catRes.value.data)) {
-          setCategories(catRes.value.data);
-        }
-        // Mark categories as loaded regardless (API responded)
-        setCategoriesLoaded(true);
-
-        if (prodRes.status === 'fulfilled' && prodRes.value?.success && Array.isArray(prodRes.value.data)) {
-          setProducts(prodRes.value.data);
-        }
-        // Mark products as loaded (API responded)
-        setProductsLoaded(true);
-
-        if (orderRes.status === 'fulfilled' && orderRes.value?.success && Array.isArray(orderRes.value.data)) {
-          const mappedOrders: Order[] = orderRes.value.data.map((o: any) => ({
-            id: o.id,
-            orderNumber: o.orderId,
-            customer: {
-              fullName: o.customerName,
-              phoneNumber: o.customerPhone,
-              alternativePhone: o.customerEmail || '',
-              deliveryAddress: o.customerAddress,
-              districtArea: o.customerCity,
-              note: o.customerNotes || '',
-            },
-            items: o.items.map((i: any) => ({
-              product: {
-                id: i.productId,
-                title: i.title,
-                price: i.price,
-                images: [i.image || '/final_logo6.png'],
-              } as Product,
-              selectedSize: i.size || 'Standard',
-              selectedColor: { name: i.colorName || 'Default', hex: '#000' },
-              quantity: i.quantity,
-            })),
-            subtotal: o.subtotal,
-            shippingFee: o.shippingFee,
-            discount: o.discount || 0,
-            totalAmount: o.totalAmount,
-            paymentMethod: o.paymentMethod,
-            status: o.status,
-            createdAt: o.createdAt,
-          }));
-          setOrders(mappedOrders);
-        }
-
-        if (settingsRes.status === 'fulfilled' && settingsRes.value?.success && settingsRes.value.settings) {
-          setSiteSettings(settingsRes.value.settings);
-        }
-
-        if (storesRes.status === 'fulfilled' && storesRes.value?.success && Array.isArray(storesRes.value.stores)) {
-          setStoreLocations(storesRes.value.stores);
-        }
-
-        // Clean up any heavy legacy caches from previous versions to free up quota
-        try {
-          localStorage.removeItem('texwear_categories_v3');
-          localStorage.removeItem('texwear_orders_v2');
-          localStorage.removeItem('texwear_categories');
-          localStorage.removeItem('texwear_orders');
-          localStorage.removeItem('texwear_products');
-        } catch (_) {}
-
-        const savedCart = localStorage.getItem(LOCAL_STORAGE_KEY_CART);
-        if (savedCart) {
-          try {
-            const parsed = JSON.parse(savedCart);
-            if (Array.isArray(parsed)) setCart(parsed);
-          } catch (e) {
-            console.error('Error parsing cart from localStorage', e);
-          }
-        }
-
-        const savedWishlist = localStorage.getItem(LOCAL_STORAGE_KEY_WISHLIST);
-        if (savedWishlist) {
-          try {
-            const parsed = JSON.parse(savedWishlist);
-            if (Array.isArray(parsed)) setWishlist(parsed);
-          } catch (e) {
-            console.error('Error parsing wishlist from localStorage', e);
-          }
-        }
+        const parsed = JSON.parse(savedCart);
+        if (Array.isArray(parsed)) setCart(parsed);
       } catch (e) {
-        console.error('Error loading data from API', e);
+        console.error('Error parsing cart from localStorage', e);
       }
     }
 
-    loadInitialData();
-  }, []);
+    const savedWishlist = localStorage.getItem(LOCAL_STORAGE_KEY_WISHLIST);
+    if (savedWishlist) {
+      try {
+        const parsed = JSON.parse(savedWishlist);
+        if (Array.isArray(parsed)) setWishlist(parsed);
+      } catch (e) {
+        console.error('Error parsing wishlist from localStorage', e);
+      }
+    }
+  }, [refreshOrders]);
 
   useEffect(() => {
     safeSetLocalStorage(LOCAL_STORAGE_KEY_CART, JSON.stringify(serializeCart(cart)));
@@ -757,6 +779,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         categoriesLoaded,
         banners,
         orders,
+        ordersLoaded,
+        refreshOrders,
         cart,
         wishlist,
         siteSettings,

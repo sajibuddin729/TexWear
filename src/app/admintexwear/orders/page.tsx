@@ -3,19 +3,29 @@
 import React, { useState } from 'react';
 import { useShop } from '@/context/ShopContext';
 import { Order, OrderStatus } from '@/types';
-import { ShoppingBag, Eye, X, PhoneCall, MapPin, CheckCircle, Trash2 } from 'lucide-react';
+import { ShoppingBag, Eye, X, PhoneCall, MapPin, CheckCircle, Trash2, RefreshCw } from 'lucide-react';
 
 export default function AdminOrdersPage() {
-  const { orders, updateOrderStatus, deleteOrder } = useShop();
+  const { orders, ordersLoaded, refreshOrders, updateOrderStatus, deleteOrder } = useShop();
 
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const filteredOrders = orders.filter((ord) => {
     if (selectedStatus !== 'all' && ord.status !== selectedStatus) return false;
     return true;
   });
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshOrders();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
     updateOrderStatus(orderId, newStatus);
@@ -57,21 +67,33 @@ export default function AdminOrdersPage() {
           </p>
         </div>
 
-        {/* Filter */}
-        <div className="flex items-center gap-2 bg-slate-950 p-2 rounded-2xl border border-slate-800 text-xs font-bold text-slate-300">
-          <span>Filter Status:</span>
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="bg-transparent focus:outline-none text-white font-bold cursor-pointer"
+        {/* Filter and Refresh */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing || !ordersLoaded}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-800 bg-slate-950 text-xs font-bold text-slate-300 hover:text-white hover:border-slate-700 transition-colors disabled:opacity-50 cursor-pointer"
+            title="Reload orders from database"
           >
-            <option value="all">All Orders ({orders.length})</option>
-            <option value="Pending">Pending</option>
-            <option value="Processing">Processing</option>
-            <option value="Shipped">Shipped</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+
+          <div className="flex items-center gap-2 bg-slate-950 p-2 rounded-2xl border border-slate-800 text-xs font-bold text-slate-300">
+            <span>Filter Status:</span>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="bg-transparent focus:outline-none text-white font-bold cursor-pointer"
+            >
+              <option value="all">All Orders ({orders.length})</option>
+              <option value="Pending">Pending</option>
+              <option value="Processing">Processing</option>
+              <option value="Shipped">Shipped</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -92,7 +114,16 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-900">
-              {filteredOrders.length === 0 ? (
+              {!ordersLoaded ? (
+                <tr>
+                  <td colSpan={8} className="p-12 text-center text-slate-400">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <RefreshCw className="w-6 h-6 text-sky-400 animate-spin" />
+                      <span className="font-bold text-xs">Loading orders from database...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredOrders.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="p-8 text-center text-slate-500 font-bold">
                     No orders found.
