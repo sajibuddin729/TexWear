@@ -20,8 +20,10 @@ import {
   ChevronRight,
   FileText,
   Sparkles,
+  ZoomIn,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { ProductLightboxModal } from '@/components/shop/ProductLightboxModal';
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = use(params);
@@ -38,6 +40,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [isSpecsOpen, setIsSpecsOpen] = useState(false);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+
+  // Full-screen Gallery & Zoom Lightbox Modal
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const handleOpenLightbox = (index?: number) => {
+    setLightboxIndex(index !== undefined ? index : currentImageIndex);
+    setIsLightboxOpen(true);
+  };
 
   useEffect(() => {
     if (product) {
@@ -110,19 +121,30 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 bg-white dark:bg-slate-900 p-6 md:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mb-12">
           {/* Left Gallery (6 cols) */}
           <div className="lg:col-span-6 space-y-4">
-            {/* Main Display Image */}
-            <div className="relative w-full aspect-square sm:aspect-[4/3] md:aspect-square bg-slate-50 dark:bg-slate-800/40 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700/80 p-3 sm:p-5 flex items-center justify-center shadow-inner group">
+            {/* Main Display Image - Click to open full-screen zoom gallery */}
+            <div
+              onClick={() => handleOpenLightbox(currentImageIndex)}
+              className="relative w-full aspect-square sm:aspect-[4/3] md:aspect-square bg-slate-50 dark:bg-slate-800/40 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700/80 p-3 sm:p-5 flex items-center justify-center shadow-inner group cursor-pointer"
+              title="Click to open full-screen gallery & zoom"
+            >
               <img
                 key={mainImage}
                 src={mainImage}
                 alt={product.title}
-                className="w-full h-full max-h-[500px] object-contain transition-all duration-300 group-hover:scale-105"
+                className="w-full h-full max-h-[500px] object-contain transition-all duration-300 group-hover:scale-105 select-none"
               />
+
               {product.discountPercentage && (
-                <span className="absolute top-4 left-4 bg-red-600 text-white font-black text-xs uppercase tracking-wider px-3 py-1 rounded-md shadow-md z-10">
+                <span className="absolute top-4 left-4 bg-red-600 text-white font-black text-xs uppercase tracking-wider px-3 py-1 rounded-md shadow-md z-10 pointer-events-none select-none">
                   -{product.discountPercentage}% OFF
                 </span>
               )}
+
+              {/* Click to Zoom & Expand Badge */}
+              <div className="absolute bottom-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/75 group-hover:bg-sky-600 backdrop-blur-md text-white/90 group-hover:text-white text-[11px] font-bold border border-white/10 shadow-lg transition-all pointer-events-none select-none">
+                <ZoomIn className="w-3.5 h-3.5 text-sky-400 group-hover:text-white transition-colors" />
+                <span>Click to zoom image</span>
+              </div>
 
               {/* Prev / Next Navigation Arrows */}
               {product.images.length > 1 && (
@@ -133,7 +155,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                       e.stopPropagation();
                       handlePrevImage();
                     }}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-lg hover:bg-white dark:hover:bg-slate-900 hover:text-sky-600 transition-all opacity-85 group-hover:opacity-100 cursor-pointer"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-lg hover:bg-white dark:hover:bg-slate-900 hover:text-sky-600 transition-all opacity-85 group-hover:opacity-100 cursor-pointer z-10"
                     title="Previous Image"
                   >
                     <ChevronLeft className="w-5 h-5" />
@@ -145,14 +167,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                       e.stopPropagation();
                       handleNextImage();
                     }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-lg hover:bg-white dark:hover:bg-slate-900 hover:text-sky-600 transition-all opacity-85 group-hover:opacity-100 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-lg hover:bg-white dark:hover:bg-slate-900 hover:text-sky-600 transition-all opacity-85 group-hover:opacity-100 cursor-pointer z-10"
                     title="Next Image"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
 
                   {/* Image Counter Badge */}
-                  <span className="absolute bottom-4 right-4 bg-slate-950/75 backdrop-blur-md text-white font-black text-xs px-3 py-1 rounded-full border border-white/20 shadow-md">
+                  <span className="absolute bottom-4 right-4 bg-slate-950/75 backdrop-blur-md text-white font-black text-xs px-3 py-1 rounded-full border border-white/20 shadow-md select-none">
                     {currentImageIndex + 1} / {product.images.length}
                   </span>
                 </>
@@ -485,6 +507,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             ? 'shoes'
             : 'tops'
         }
+      />
+
+      {/* Full-screen Lightbox Gallery Modal with Zoom */}
+      <ProductLightboxModal
+        isOpen={isLightboxOpen}
+        onClose={() => setIsLightboxOpen(false)}
+        images={product.images}
+        initialIndex={lightboxIndex}
+        productTitle={product.title}
       />
     </div>
   );
