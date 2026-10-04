@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'utnecu0h',
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'utnecu0h',
   api_key: process.env.CLOUDINARY_API_KEY || '635186917662994',
   api_secret: process.env.CLOUDINARY_API_SECRET || '6l2XgCXnriqMxA5B00JBcxzzz9k',
   secure: true,
