@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { deleteFromCloudinary } from '@/lib/cloudinary';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -13,12 +14,14 @@ function formatProduct(p: any) {
     colors: typeof p.colors === 'string' ? JSON.parse(p.colors) : p.colors,
     details: p.details && typeof p.details === 'string' ? JSON.parse(p.details) : p.details || [],
     createdAt: p.createdAt ? p.createdAt.toISOString() : new Date().toISOString(),
+    updatedAt: p.updatedAt ? p.updatedAt.toISOString() : new Date().toISOString(),
   };
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+
     const product = await prisma.product.findFirst({
       where: {
         OR: [{ id }, { slug: id }],
@@ -40,6 +43,28 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
     const body = await request.json();
+
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
+      select: { images: true },
+    });
+
+    // If images are updated, delete removed images from Cloudinary
+    if (body.images !== undefined && existingProduct?.images) {
+      try {
+        const oldImages: string[] = typeof existingProduct.images === 'string'
+          ? JSON.parse(existingProduct.images)
+          : existingProduct.images;
+        const newImages: string[] = Array.isArray(body.images) ? body.images : [];
+
+        const removedImages = oldImages.filter((img) => !newImages.includes(img));
+        if (removedImages.length > 0) {
+          await Promise.allSettled(removedImages.map((img) => deleteFromCloudinary(img)));
+        }
+      } catch (imgCleanupErr) {
+        console.warn('Failed to cleanup replaced images on Cloudinary:', imgCleanupErr);
+      }
+    }
 
     const dataToUpdate: any = {};
 
@@ -81,11 +106,38 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   try {
     const { id } = await params;
 
+    // 1. Find product to get its image URLs
+    const product = await prisma.product.findUnique({
+      where: { id },
+      select: { images: true },
+    });
+
+    // 2. Delete associated images from Cloudinary
+    if (product?.images) {
+      try {
+        let imageList: string[] = [];
+        try {
+          imageList = typeof product.images === 'string'
+            ? JSON.parse(product.images)
+            : product.images;
+        } catch {
+          imageList = [product.images];
+        }
+
+        if (Array.isArray(imageList) && imageList.length > 0) {
+          await Promise.allSettled(imageList.map((img) => deleteFromCloudinary(img)));
+        }
+      } catch (cloudErr) {
+        console.warn('Error deleting product images from Cloudinary:', cloudErr);
+      }
+    }
+
+    // 3. Delete product from database
     await prisma.product.delete({
       where: { id },
     });
 
-    return NextResponse.json({ success: true, message: 'Product deleted successfully' });
+    return NextResponse.json({ success: true, message: 'Product and Cloudinary images deleted successfully' });
   } catch (error) {
     console.error('Error deleting product:', error);
     return NextResponse.json({ success: false, error: 'Failed to delete product' }, { status: 500 });

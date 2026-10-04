@@ -1,84 +1,83 @@
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import cloudinary from '@/lib/cloudinary';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function POST(request: Request) {
   try {
     const contentType = request.headers.get('content-type') || '';
 
-    // Handle JSON payload with base64 image string
+    // Handle JSON payload (e.g. Base64 or image URL)
     if (contentType.includes('application/json')) {
-      const { image, name } = await request.json();
+      const body = await request.json();
+      const { image, folder = 'texwear' } = body;
+
       if (!image) {
-        return NextResponse.json({ success: false, error: 'No image data provided' }, { status: 400 });
+        return NextResponse.json(
+          { success: false, error: 'No image provided' },
+          { status: 400 }
+        );
       }
 
-      // If already a URL, return it
-      if (image.startsWith('http://') || image.startsWith('https://') || image.startsWith('/')) {
-        return NextResponse.json({ success: true, url: image });
-      }
+      const uploadResult = await cloudinary.uploader.upload(image, {
+        folder,
+        resource_type: 'auto',
+      });
 
-      // Convert Base64 data URL to Buffer
-      const matches = image.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
-      if (!matches) {
-        return NextResponse.json({ success: false, error: 'Invalid base64 image string' }, { status: 400 });
-      }
-
-      const ext = matches[1] || 'jpg';
-      const base64Data = matches[2];
-      const buffer = Buffer.from(base64Data, 'base64');
-
-      const fileName = `upload_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
-      try {
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-        await mkdir(uploadDir, { recursive: true });
-        await writeFile(path.join(uploadDir, fileName), buffer);
-
-        const publicUrl = `/uploads/${fileName}`;
-        return NextResponse.json({ success: true, url: publicUrl });
-      } catch (fsErr: any) {
-        console.warn('Filesystem write not allowed (Serverless/Vercel):', fsErr.message);
-        // On serverless read-only platforms like Vercel, store the data URL directly in database
-        return NextResponse.json({
-          success: true,
-          url: image,
-          note: 'Serverless storage: stored as direct image data'
-        });
-      }
-    }
-
-    // Handle multipart/form-data File upload
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-
-    if (!file) {
-      return NextResponse.json({ success: false, error: 'No file uploaded' }, { status: 400 });
-    }
-
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    const ext = path.extname(file.name) || '.jpg';
-    const fileName = `upload_${Date.now()}_${Math.random().toString(36).substring(2, 7)}${ext}`;
-
-    try {
-      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-      await mkdir(uploadDir, { recursive: true });
-      await writeFile(path.join(uploadDir, fileName), buffer);
-
-      const publicUrl = `/uploads/${fileName}`;
-      return NextResponse.json({ success: true, url: publicUrl });
-    } catch (fsErr: any) {
-      console.warn('Filesystem write not allowed (Serverless/Vercel):', fsErr.message);
-      const mime = file.type || 'image/jpeg';
-      const dataUrl = `data:${mime};base64,${buffer.toString('base64')}`;
       return NextResponse.json({
         success: true,
-        url: dataUrl,
+        url: uploadResult.secure_url,
+        publicId: uploadResult.public_id,
       });
     }
-  } catch (error) {
-    console.error('Error uploading image:', error);
-    return NextResponse.json({ success: false, error: 'Failed to upload image' }, { status: 500 });
+
+    // Handle FormData payload (direct file upload)
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      const file = formData.get('file') as File | null;
+      const folder = (formData.get('folder') as string) || 'texwear';
+
+      if (!file) {
+        return NextResponse.json(
+          { success: false, error: 'No file uploaded' },
+          { status: 400 }
+        );
+      }
+
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      const uploadResult = await new Promise<any>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder,
+            resource_type: 'auto',
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        uploadStream.end(buffer);
+      });
+
+      return NextResponse.json({
+        success: true,
+        url: uploadResult.secure_url,
+        publicId: uploadResult.public_id,
+      });
+    }
+
+    return NextResponse.json(
+      { success: false, error: 'Unsupported Content-Type' },
+      { status: 400 }
+    );
+  } catch (error: any) {
+    console.error('Cloudinary upload error:', error);
+    return NextResponse.json(
+      { success: false, error: error?.message || 'Failed to upload image to Cloudinary' },
+      { status: 500 }
+    );
   }
 }

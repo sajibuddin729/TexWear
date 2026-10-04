@@ -31,6 +31,7 @@ export default function AdminProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Form State
@@ -227,45 +228,51 @@ export default function AdminProductsPage() {
     });
   };
 
-  // Device File Upload Handler (Compress + upload via binary FormData to keep payload small)
+  // Device File Upload Handler (Compress + upload directly to Cloudinary via /api/upload)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    for (const file of Array.from(files)) {
-      try {
-        const compressedDataUrl = await compressImage(file);
-        if (compressedDataUrl) {
-          // Attempt direct FormData upload to /api/upload to avoid 413 JSON payload limit
-          try {
-            const blob = await (await fetch(compressedDataUrl)).blob();
-            const formData = new FormData();
-            formData.append('file', blob, file.name || 'product.jpg');
+    setIsUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        try {
+          const compressedDataUrl = await compressImage(file);
+          if (compressedDataUrl) {
+            try {
+              const blob = await (await fetch(compressedDataUrl)).blob();
+              const formData = new FormData();
+              formData.append('file', blob, file.name || 'product.jpg');
+              formData.append('folder', 'texwear/products');
 
-            const uploadRes = await fetch('/api/upload', {
-              method: 'POST',
-              body: formData,
-            });
+              const uploadRes = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+              });
 
-            if (uploadRes.ok) {
-              const uploadData = await uploadRes.json();
-              if (uploadData.success && uploadData.url) {
-                setImages((prev) => [...prev, uploadData.url]);
-                toast.success(`Uploaded ${file.name}`);
-                continue;
+              if (uploadRes.ok) {
+                const uploadData = await uploadRes.json();
+                if (uploadData.success && uploadData.url) {
+                  setImages((prev) => [...prev, uploadData.url]);
+                  toast.success(`Uploaded: ${file.name}`);
+                  continue;
+                }
               }
+            } catch (uploadErr) {
+              console.warn('Direct upload error, falling back:', uploadErr);
             }
-          } catch (uploadErr) {
-            console.warn('Direct upload fallback to compressed data URL:', uploadErr);
-          }
 
-          // Fallback to lightweight compressed base64
-          setImages((prev) => [...prev, compressedDataUrl]);
-          toast.success(`Uploaded ${file.name}`);
+            // Fallback to compressed base64 if network failed
+            setImages((prev) => [...prev, compressedDataUrl]);
+            toast.success(`Added ${file.name}`);
+          }
+        } catch {
+          toast.error(`Failed to process ${file.name}`);
         }
-      } catch {
-        toast.error(`Failed to read ${file.name}`);
       }
+    } finally {
+      setIsUploading(false);
+      e.target.value = '';
     }
   };
 
@@ -947,13 +954,23 @@ export default function AdminProductsPage() {
 
                 {/* File Upload Zone */}
                 <div className="flex flex-col sm:flex-row items-center gap-3">
-                  <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-950 hover:bg-slate-800 border border-dashed border-sky-500/50 rounded-xl text-sky-400 font-bold cursor-pointer transition-colors w-full">
-                    <Upload className="w-4 h-4" />
-                    <span>Upload Image from Device</span>
+                  <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-950 hover:bg-slate-800 border border-dashed border-sky-500/50 rounded-xl font-bold cursor-pointer transition-colors w-full ${isUploading ? 'opacity-60 pointer-events-none text-sky-300' : 'text-sky-400'}`}>
+                    {isUploading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+                        <span>Uploading to Cloudinary CDN...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        <span>Upload Image from Device</span>
+                      </>
+                    )}
                     <input
                       type="file"
                       accept="image/*"
                       multiple
+                      disabled={isUploading}
                       onChange={handleFileUpload}
                       className="hidden"
                     />
@@ -1057,11 +1074,11 @@ export default function AdminProductsPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSaving}
+                  disabled={isSaving || isUploading}
                   className="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white rounded-xl font-extrabold uppercase shadow-lg flex items-center gap-2 cursor-pointer transition-all"
                 >
-                  {isSaving && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                  <span>{isSaving ? 'Saving...' : 'Save Product'}</span>
+                  {(isSaving || isUploading) && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                  <span>{isUploading ? 'Uploading Image...' : isSaving ? 'Saving...' : 'Save Product'}</span>
                 </button>
               </div>
             </form>

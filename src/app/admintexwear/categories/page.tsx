@@ -119,6 +119,7 @@ export default function AdminCategoriesPage() {
           const blob = await (await fetch(compressedDataUrl)).blob();
           const formData = new FormData();
           formData.append('file', blob, file.name || 'category.jpg');
+          formData.append('folder', 'texwear/categories');
 
           const uploadRes = await fetch('/api/upload', {
             method: 'POST',
@@ -533,12 +534,16 @@ export default function AdminCategoriesPage() {
                 {/* Device Upload Mode */}
                 {imageTab === 'upload' ? (
                   <div>
-                    <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-700 hover:border-sky-500 bg-slate-950 hover:bg-slate-950/80 rounded-2xl cursor-pointer transition-all group text-center">
+                    <label className={`flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-700 hover:border-sky-500 bg-slate-950 hover:bg-slate-950/80 rounded-2xl cursor-pointer transition-all group text-center ${isUploading ? 'opacity-60 pointer-events-none' : ''}`}>
                       <div className="w-10 h-10 rounded-full bg-sky-500/10 text-sky-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                        <Upload className="w-5 h-5" />
+                        {isUploading ? (
+                          <div className="w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Upload className="w-5 h-5" />
+                        )}
                       </div>
                       <span className="font-black text-xs text-white">
-                        {isUploading ? 'Reading Image...' : 'Click to Upload from Device'}
+                        {isUploading ? 'Uploading to Cloudinary CDN...' : 'Click to Upload from Device'}
                       </span>
                       <span className="text-[10px] text-slate-500 mt-0.5">
                         Supports PNG, JPG, JPEG, WEBP (Max 5MB)
